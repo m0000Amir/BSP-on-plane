@@ -1,17 +1,20 @@
-from problem.input1 import gate, obj, station, sta_type
-from src.network import BSS
-from src.draw import draw_input_data, draw_lp_graph
-
+"""
+Linear programming problem feasible solution
+"""
 from itertools import product
 from itertools import permutations
 
-from scipy.optimize import linprog
+from problem.lppfs_input import gate, obj, sta, sta_set
+from src.network import BSS
+from src.draw import draw_input_data, draw_lp_graph
+from src.lp_problem import solve_lp_problem
+
 import pandas as pd
 import numpy as np
 
 
-class OP:
-    """Optimization problem"""
+class LPPFS:
+    """ Linear programming problem feasible solution"""
     def __init__(self, network):
         self.net = network
         self.adj_mat = network.adj_matrix.toarray()
@@ -20,12 +23,11 @@ class OP:
         self.o_lim = obj['lim']
         self.limit = None
 
-        self._lim = [sta_type[i + 1]['limit']
-                     for i in range(len(sta_type))]
+        self._lim = [sta_set[i + 1]['limit']
+                     for i in range(len(sta_set))]
         self._l = None
 
         self.f = None
-        self.int_constraints = None
         self.lower_bounds = None
         self.upper_bounds = None
         self.eq_array = None
@@ -170,50 +172,25 @@ class OP:
         self.make_inequality(row_num, x_name, w_name)
 
 
-def solve_lp_problem(obj_func, ineq_array, ineq_b, eq_array, eq_b, lb, ub):
-    """
-    Simplex Method solution
-    :param obj_func: objective function (f = 0, feasible solution)
-    :param ineq_array: inequality matrix
-    :param ineq_b: linear inequality constraint vector
-    :param eq_array: equality matrix
-    :param eq_b: linear equality constraint vector
-    :param lb: lower bound
-    :param ub: upper bound
-    :return: result
-    """
-    b_array = np.vstack([lb, ub])
-    minmax_bounds = tuple((b_array[0, i], b_array[1, i])
-                          for i in range(len(b_array[0])))
+def lppfs_solver():
+    # draw_input_data(gate, obj, sta)
+    net = BSS(gate, obj, sta, sta_set)
+    net.create()
 
-    res = linprog(obj_func, A_ub=ineq_array, b_ub=ineq_b,
-                  A_eq=eq_array, b_eq=eq_b, bounds=minmax_bounds,
-                  method='simplex', callback=None,
-                  options={'disp': True})
-    assert round(res.fun) == 0, \
-        ('There is no solution because the '
-         'objective function value of linear '
-         'programing problem is not zero')
-    return res
+    problem = LPPFS(net)
+    problem.create_matrix()
+    draw_lp_graph(net)
 
+    result = solve_lp_problem(problem.f.values,
+                              problem.ineq_array.values,
+                              problem.ineq_b,
+                              problem.eq_array.values,
+                              problem.eq_b,
+                              problem.lower_bounds,
+                              problem.upper_bounds)
 
-draw_input_data(gate, obj, station)
-net = BSS(gate, obj, station, sta_type)
-net.create()
+    solution = pd.Series(result.x, index=problem.eq_array.columns.values)
+    draw_lp_graph(net)
 
-problem = OP(net)
-problem.create_matrix()
-draw_lp_graph(net)
-
-res = solve_lp_problem(problem.f.values,
-                       problem.ineq_array.values,
-                       problem.ineq_b,
-                       problem.eq_array.values,
-                       problem.eq_b,
-                       problem.lower_bounds,
-                       problem.upper_bounds)
-
-solution = pd.Series(res.x, index=problem.eq_array.columns.values)
-draw_lp_graph(net)
-
-debug = 'stop'
+    debug = 'stop'
+    return solution

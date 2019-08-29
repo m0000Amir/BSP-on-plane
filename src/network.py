@@ -1,5 +1,5 @@
 """
-Base station system
+Base sta system
 """
 import itertools
 import math
@@ -13,34 +13,35 @@ class BSS:
         self.o_p = obj['pos']
         # Then obj position for i = 1 ... n1;
         #      sta position for i = n1 + 1 ... n.
-        self.s_p = {k + len(self.o_p) + 1: value
-                    for k, value in enumerate(station['pos'].values())}
-
+        self.s_p = {k + len(self.o_p) + 1: value for k, value in
+                    enumerate(list(station['pos'].values()) * len(sta_type))}
         self.coverage = None
         self.link_distance = None
         self.G = nx.DiGraph()
         self.adj_matrix = None
 
-        self._c = [sta_type[i + 1]['coverage']
+        self.c = [sta_type[i + 1]['coverage']
+                  for i in range(len(sta_type))]
+        self.ld = [sta_type[i + 1]['link_distance']
                    for i in range(len(sta_type))]
-        self._ld = [sta_type[i + 1]['link_distance']
-                    for i in range(len(sta_type))]
 
     def prepare_sta_param(self):
         """
-        prepare station params
-        :return: coverage, link distance.
+        prepare sta params
+        :return: sta_pos, coverage, link distance.
         """
         _s_key = list(self.s_p.keys())
         # coverage
-        _cov = list(j for i in [[k] * len(self.s_p)
-                    for k in self._c] for j in i)
+        a = int(len(self.s_p) / len(self.c))
+
+        _cov = list(j for i in [[k] * int(len(self.s_p) / len(self.c))
+                                for k in self.c] for j in i)
         self.coverage = {k + _s_key[0]: value
                          for k, value in enumerate(_cov)}
 
         # link distance
-        _link = list(j for i in [[k] * len(self.s_p)
-                                 for k in self._ld] for j in i)
+        _link = list(j for i in [[k] * int(len(self.s_p) / len(self.ld))
+                                 for k in self.ld] for j in i)
         self.link_distance = {k + _s_key[0]: value
                               for k, value in enumerate(_link)}
 

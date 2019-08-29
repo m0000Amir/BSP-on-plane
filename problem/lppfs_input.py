@@ -18,11 +18,11 @@ obj = {'pos': {1: (1, 6),
                4: 10,
                }}
 
-station = {'pos': {1: (4, 1),
-                   2: (5, 4),
-                   3: (4, 7),
-                   }}
+sta = {'pos': {1: (4, 1),
+               2: (5, 4),
+               3: (4, 7),
+               }}
 
-sta_type = {1: {'limit': 200, 'coverage': 10, 'link_distance': 10},
-                }
+sta_set = {1: {'limit': 200, 'coverage': 10, 'link_distance': 10},
+           }
 
