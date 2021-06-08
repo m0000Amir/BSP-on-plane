@@ -7,7 +7,8 @@ from itertools import permutations
 from problem.milpop_input import gate, obj, sta, sta_type
 from src.network import BSS
 from src.draw import draw_input_data, draw_milp_graph
-from src.milp_problem import solve_milp_problem
+import src.matlab.milp_problem
+import src.gurobi.milp_problem
 
 import pandas as pd
 import numpy as np
@@ -238,7 +239,7 @@ class MILPOP:
         return name
 
 
-def milpop_solver():
+def get_milpop_solution(solver='gurobi'):
     """
 
     :return: milppfs solution
@@ -249,17 +250,22 @@ def milpop_solver():
     problem = MILPOP(net)
     problem.create_matrix()
     y_solution = problem.get_solution_col_name()
-
-    x = solve_milp_problem(problem.f.values,
-                           problem.int_constraints,
-                           problem.ineq_array.values,
-                           problem.ineq_b,
-                           problem.eq_array.values,
-                           problem.eq_b,
-                           problem.lower_bounds,
-                           problem.upper_bounds)
+    if solver == 'gurobi':
+        x = src.gurobi.milp_problem.solve(problem)
+        # x = src.matlab.milp_problem.solve
+    else:
+        x = src.matlab.milp_problem.solve(problem.f.values,
+                                          problem.int_constraints,
+                                          problem.ineq_array.values,
+                                          problem.ineq_b,
+                                          problem.eq_array.values,
+                                          problem.eq_b,
+                                          problem.lower_bounds,
+                                          problem.upper_bounds)
     solution = pd.Series(x, index=problem.f.columns.values).T
     placed_station = solution[y_solution].values
     placed_station.tolist()
     draw_milp_graph(net, placed_station, y_solution)
     return solution
+
+

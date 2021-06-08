@@ -2,7 +2,7 @@
 call MatLAB engine from Python to src MILP problem
 """
 import os
-import matlab.engine
+# import matlab.engine
 import scipy.io
 import itertools
 
@@ -19,8 +19,8 @@ def save_mfile(path, array, name):
     return os.path.abspath(path + name + '.mat')
 
 
-def solve_milp_problem(f, intcon, A, b, Aeq, beq, lb, ub, option='optimization',
-                       path='../src/matlab/matfiles/'):
+def solve(f, intcon, A, b, Aeq, beq, lb, ub, option='optimization',
+          path='../src/matlab/matfiles/'):
     """
     call m-file with solver function
     :param path: it is path to save .m-file
