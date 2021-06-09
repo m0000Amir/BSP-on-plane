@@ -27,6 +27,9 @@ sta = {'pos': {1: (2, 4),
 sta_type = {1: {'limit': 80, 'coverage': 1, 'link_distance': 6, 'cost': 70},
             2: {'limit': 100, 'coverage': 2, 'link_distance': 5, 'cost': 75},
             3: {'limit': 200, 'coverage': 3, 'link_distance': 6, 'cost': 85},
+            # 4: {'limit': 80, 'coverage': 1, 'link_distance': 6, 'cost': 70},
+            # 5: {'limit': 100, 'coverage': 2, 'link_distance': 5, 'cost': 75},
+            # 6: {'limit': 200, 'coverage': 3, 'link_distance': 6, 'cost': 85},
             }
 
 

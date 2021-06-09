@@ -11,10 +11,28 @@ def solve(problem: MILPOP):
     try:
         # Create a new model
         m = gp.Model("Optimal placement")
-        print(len(problem.f.values))
-        x = m.addMVar(shape=int(problem.f.size), lb=0.0, ub=GRB.INFINITY)
+        # print(len(problem.upper_bounds[problem.upper_bounds == 1]))
+        # print(len(problem.upper_bounds[problem.upper_bounds == float('Inf')]))
+        xvar_count = len(problem.upper_bounds[problem.upper_bounds == float('Inf')])
+        yvar_count = len(problem.upper_bounds[problem.upper_bounds == 1])
+        vtype = [GRB.CONTINUOUS] * xvar_count + [GRB.BINARY] * yvar_count
+        # x = m.addMVar(shape=xvar_count,
+        #               lb=0,
+        #               ub=GRB.INFINITY,
+        #               vtype=GRB.CONTINUOUS,
+        #               name='x')
+        # y = m.addMVar(shape=yvar_count,
+        #               lb=0,
+        #               ub=1,
+        #               vtype=GRB.BINARY,
+        #               name='y')
+        # aa = [GRB.INFINITY]
+        x = m.addMVar(shape=int(problem.f.size),
+                      lb=0.0, ub=problem.upper_bounds,
+                      vtype=vtype)
         # Set objective
         obj = problem.f.values
+
         m.setObjective(obj @ x, GRB.MAXIMIZE)
 
         m.addConstr(problem.ineq_array.values @ x <= problem.ineq_b, name="inequality")
@@ -32,4 +50,4 @@ def solve(problem: MILPOP):
     except AttributeError:
         print('Encountered an attribute error')
 
-    return m
+    return x.X
