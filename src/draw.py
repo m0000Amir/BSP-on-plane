@@ -100,8 +100,7 @@ def draw_milp_graph(net, placed_sta, y):
     fig = plt.gcf()
     ax = fig.gca()
     for i in range(len(sta)):
-        coverage = plt.Circle(net.s_p[sta[i]], cov[i],
-                              edgecolor='r', linestyle='--', fill=True,
+        coverage = plt.Circle(net.s_p[sta[i]], cov[i], linestyle='--', fill=True,
                               alpha=0.1, color='r')
         ax.add_artist(coverage)
     ax.axis('equal')

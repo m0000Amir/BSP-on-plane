@@ -167,7 +167,6 @@ class MILPOP:
             y_name = [y[k + j * _s_p_num] for j in range(0, len(self._lim))]
             column, = np.where(np.in1d(self.ineq_array.columns.values, y_name))
             self.ineq_array.iloc[row+k, column] = 1
-            print('aaaaaaaaaaaaaaaaaaa')
             self.ineq_b[row+k] = 1
 
         # for i in range(0, len(self._lim)):

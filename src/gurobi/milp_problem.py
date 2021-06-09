@@ -33,7 +33,7 @@ def solve(problem: MILPOP):
         # Set objective
         obj = problem.f.values
 
-        m.setObjective(obj @ x, GRB.MAXIMIZE)
+        m.setObjective(obj @ x, GRB.MINIMIZE)
 
         m.addConstr(problem.ineq_array.values @ x <= problem.ineq_b, name="inequality")
         m.addConstr(problem.eq_array.values @ x == problem.eq_b, name="equality")
