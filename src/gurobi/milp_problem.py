@@ -13,9 +13,13 @@ def solve(problem: MILPOP):
         m = gp.Model("Optimal placement")
         # print(len(problem.upper_bounds[problem.upper_bounds == 1]))
         # print(len(problem.upper_bounds[problem.upper_bounds == float('Inf')]))
-        xvar_count = len(problem.upper_bounds[problem.upper_bounds == float('Inf')])
-        yvar_count = len(problem.upper_bounds[problem.upper_bounds == 1])
-        vtype = [GRB.CONTINUOUS] * xvar_count + [GRB.BINARY] * yvar_count
+        column_name = problem.f.columns.str.startswith('z').sum()
+        zvar_count = problem.f.columns.str.startswith('z').sum()
+        xvar_count = problem.f.columns.str.startswith('x').sum()
+        yvar_count = problem.f.columns.str.startswith('y').sum()
+        vtype = ([GRB.BINARY] * zvar_count +
+                 [GRB.CONTINUOUS] * xvar_count +
+                 [GRB.BINARY] * yvar_count)
         # x = m.addMVar(shape=xvar_count,
         #               lb=0,
         #               ub=GRB.INFINITY,

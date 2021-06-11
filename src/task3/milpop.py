@@ -3,6 +3,7 @@ Mixed-integer linear programming problem feasible solution
 """
 from itertools import product
 from itertools import permutations
+from typing import List
 
 from problem.milpop_input import gate, obj, sta, sta_type
 from src.network import BSS
@@ -58,27 +59,27 @@ class MILPOP:
         s_s = [i for i in permutations(s_k, 2)]
         s_g = [i for i in product(s_k, g_k)]
 
-        o_s_name = self.value_name('x', o_s)
+        o_s_name = self.value_name('z', o_s)
         s_s_name = self.value_name('x', s_s)
         s_g_name = self.value_name('x', s_g)
 
-        return o_s_name + s_s_name + s_g_name
+        return o_s_name, s_s_name + s_g_name
 
     def create_value(self, w_num):
-        x = self.create_edge()
+        z, x = self.create_edge()
         y = ['y' + str(i) for i in self.net.s_p.keys()]
         w = ['w' + str(i) for i in range(w_num)]
 
-        return [x, y, w]
+        return [z, x, y, w]
 
-    def make_objective(self, x, y):
+    def make_objective(self, z: list, x: list, y:list) -> None:
         """
         make objective function
         :param x: name of edge parameter vector
         :param y: name of bool parameter vector
         :return: self.f
         """
-        col = x + y
+        col = z + x + y
         data = np.zeros([1, len(col)]).astype(int)
         self.f = pd.DataFrame(data, columns=col)
         column, = np.where(np.in1d(self.f.columns.values, y))
@@ -90,12 +91,17 @@ class MILPOP:
         self.lower_bounds = np.zeros([1, len(col)]).astype(int)
         self.upper_bounds = np.ones([1, len(col)]).astype(int) * np.inf
 
+        self._z_index, = np.where(np.in1d(self.f.columns.values, z))
+        self.upper_bounds[0, self._z_index] = 1
+
         self._y_index, = np.where(np.in1d(self.f.columns.values, y))
         self.upper_bounds[0, self._y_index] = 1
-        # because index start from 1 not 0 in Matlab Optimization Toolbox
-        self.int_constraints = [i + 1 for i in self._y_index.tolist()]
 
-    def make_for_g(self, i):
+        # because index start from 1 not 0 in Matlab Optimization Toolbox
+        self.int_constraints = ([i + 1 for i in self._z_index.tolist()] +
+                                [i + 1 for i in self._y_index.tolist()])
+
+    def make_for_g(self, i: int) -> None:
         adj_mat_r, = np.where(self.adj_mat[:, i] == 1)
         adj_mat_r_name = ['x' + str(adj_mat_r[j]) + '_' +
                           str(i) for j in range(len(adj_mat_r))]
@@ -106,24 +112,38 @@ class MILPOP:
         self.eq_b[i] = sum(self._common_limit[j]
                            for j in list(self.net.o_p.keys()))
 
-    def make_for_o(self, i):
+    def make_for_o(self, i: int) -> None:
         adj_mat_c, = np.where(self.adj_mat[i, :] == 1)
-        adg_mat_c_name = ['x' + str(i) + '_' +
+        adg_mat_c_name = ['z' + str(i) + '_' +
                           str(adj_mat_c[j]) for j in range(len(adj_mat_c))]
 
         column, = np.where(np.in1d(self.eq_array.columns.values,
                                    adg_mat_c_name))
         self.eq_array.iloc[i, column] = 1
-        self.eq_b[i] = self._common_limit[i]
+        # TODO: delete values of right vector
+        # self.eq_b[i] = self._common_limit[i]
+        self.eq_b[i] = 1
 
     def add_input_edge_s(self, i, array):
         row_mat, = np.where(self.adj_mat[:, i] == 1)
-        mat_name_plus = ['x' + str(row_mat[j]) + '_' + str(i)
-                         for j in range(len(row_mat))]
+        # mat_name_plus = ['x' + str(row_mat[j]) + '_' + str(i)
+        #                  for j in range(len(row_mat))]
 
-        column_plus, = np.where(np.in1d(array.columns.values,
-                                        mat_name_plus))
-        array.iloc[i, column_plus] = 1
+        for j in row_mat:
+            if int(j) in self.o_lim.keys():
+                var = 'z'
+                value = self.o_lim[j]
+            else:
+                var = 'x'
+                value = 1
+            column_name = [var + str(j) + '_' + str(i)]
+            column_index = np.where(np.in1d(array.columns.values,
+                                           column_name))
+            array.iloc[i, column_index] = value
+
+        # column_plus, = np.where(np.in1d(array.columns.values,
+        #                                 mat_name_plus))
+        # array.iloc[i, column_plus] = 1
 
     def make_for_s(self, i):
 
@@ -137,10 +157,11 @@ class MILPOP:
         self.eq_array.iloc[i, column_minus] = -1
         self.eq_b[i] = 0
 
-    def make_equality(self, row, x, y):
-        data_eq = np.zeros([row, len(x+y)]).astype(int)
+    def make_equality(self, row: int, z: List[str],
+                      x: List[str], y: List[str]) -> None:
+        data_eq = np.zeros([row, len(z+x+y)]).astype(int)
         self.eq_b = np.zeros(row)
-        self.eq_array = pd.DataFrame(data_eq, columns=x+y)
+        self.eq_array = pd.DataFrame(data_eq, columns=z+x+y)
 
         for i in range(row):
             if i in list(self.net.g_p.keys()):
@@ -182,11 +203,12 @@ class MILPOP:
         #     self.ineq_array.iloc[row2+k+1, column] = 1
         #     self.ineq_b[row2+k+1] = 1
 
-    def make_inequality(self, row, x, y):
+    def make_inequality(self, row: int, z: List[str],
+                        x: List[str], y: List[str]) -> None:
         ineq_row = (row + int(len(self.net.s_p) / len(self._lim)))
-        data_ineq = np.zeros([ineq_row, len(x+y)]).astype(int)
+        data_ineq = np.zeros([ineq_row, len(z+x+y)]).astype(int)
         self.ineq_b = np.zeros(ineq_row)
-        self.ineq_array = pd.DataFrame(data_ineq, columns=x+y)
+        self.ineq_array = pd.DataFrame(data_ineq, columns=z+x+y)
         for i in list(self.net.s_p.keys()):
             self.add_input_edge_s(i, self.ineq_array)
             coef = -1 * self._common_limit[i]
@@ -205,7 +227,7 @@ class MILPOP:
          upper bounds vector; lower bounds vector
         """
         row_num = (len(self.net.g_p) + len(self.net.o_p) + len(self.net.s_p))
-        [x_name, y_name, _] = self.create_value(row_num)
+        [z_name, x_name, y_name, _] = self.create_value(row_num)
         # cost
         _s_key = list(self.net.s_p.keys())
         _cost = list(j for i in [[k] * int(len(self.net.s_p) / len(self._cost))
@@ -213,7 +235,7 @@ class MILPOP:
         self.cost = {k + _s_key[0]: value
                      for k, value in enumerate(_cost)}
 
-        self.make_objective(x_name, y_name)
+        self.make_objective(z_name, x_name, y_name)
         # limit
         _lim = list(j for i in [[k] * int(len(self.net.s_p)/len(self._lim))
                                 for k in self._lim] for j in i)
@@ -221,12 +243,12 @@ class MILPOP:
                       for k, value in enumerate(_lim)}
         self._common_limit = {**self.g_lim, **self.o_lim, **self.limit}
 
-        self.make_equality(row_num, x_name, y_name)
-        self.make_inequality(row_num, x_name, y_name)
+        self.make_equality(row_num, z_name, x_name, y_name)
+        self.make_inequality(row_num, z_name, x_name, y_name)
 
     def get_solution_col_name(self):
         row_num = (len(self.net.g_p) + len(self.net.o_p) + len(self.net.s_p))
-        [_, y_name, _] = self.create_value(row_num)
+        [_, _, y_name, _] = self.create_value(row_num)
 
         _s_p_num = int(len(self.net.s_p) / len(self._lim))
 
