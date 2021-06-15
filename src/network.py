@@ -11,8 +11,6 @@ class BSS:
     def __init__(self, gate, obj, station, sta_type):
         self.g_p = gate['pos']
         self.o_p = obj['pos']
-        # Then obj position for i = 1 ... n1;
-        #      sta position for i = n1 + 1 ... n.
         self.s_p = {k + len(self.o_p) + 1: value for k, value in
                     enumerate(list(station['pos'].values()) * len(sta_type))}
         self.coverage = None
@@ -32,8 +30,6 @@ class BSS:
         """
         _s_key = list(self.s_p.keys())
         # coverage
-        a = int(len(self.s_p) / len(self.c))
-
         _cov = list(j for i in [[k] * int(len(self.s_p) / len(self.c))
                                 for k in self.c] for j in i)
         self.coverage = {k + _s_key[0]: value
@@ -84,7 +80,3 @@ class BSS:
         self.check_o2g_path()
 
         self.adj_matrix = nx.adjacency_matrix(self.G)
-        a =1
-
-
-

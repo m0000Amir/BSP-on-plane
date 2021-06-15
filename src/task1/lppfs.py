@@ -173,7 +173,7 @@ class LPPFS:
 
 
 def lppfs_solver():
-    # draw_input_data(gate, obj, sta)
+    draw_input_data(gate, obj, sta)
     net = BSS(gate, obj, sta, sta_set)
     net.create()
 
@@ -187,10 +187,9 @@ def lppfs_solver():
                               problem.eq_array.values,
                               problem.eq_b,
                               problem.lower_bounds,
-                              problem.upper_bounds)
+                              problem.upper_bounds,)
 
     solution = pd.Series(result.x, index=problem.eq_array.columns.values)
     draw_lp_graph(net)
 
-    debug = 'stop'
     return solution
