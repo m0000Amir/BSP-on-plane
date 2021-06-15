@@ -7,7 +7,7 @@ from itertools import permutations
 from problem.milppfs_input import gate, obj, sta, sta_set
 from src.network import BSS
 from src.draw import draw_input_data, draw_milp_graph
-from src.milp_problem import solve_milp_problem
+from src.matlab.milp_problem import solve
 
 import pandas as pd
 import numpy as np
@@ -246,15 +246,15 @@ def milppfs_solver():
     problem.create_matrix()
     y_solution = problem.get_solution_col_name()
 
-    x = solve_milp_problem(problem.f.values,
-                           problem.int_constraints,
-                           problem.ineq_array.values,
-                           problem.ineq_b,
-                           problem.eq_array.values,
-                           problem.eq_b,
-                           problem.lower_bounds,
-                           problem.upper_bounds,
-                           option='feasible_solution')
+    x = solve(problem.f.values,
+              problem.int_constraints,
+              problem.ineq_array.values,
+              problem.ineq_b,
+              problem.eq_array.values,
+              problem.eq_b,
+              problem.lower_bounds,
+              problem.upper_bounds,
+              option='feasible_solution')
     solution = pd.Series(x, index=problem.f.columns.values).T
     placed_station = solution[y_solution].values
     placed_station.tolist()
