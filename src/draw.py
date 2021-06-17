@@ -42,7 +42,6 @@ def draw_input_data(gate, obj, station):
     plt.show()
 
 
-
 def prepare_graph_for_draw(net, placed_sta):
     s_list = list(net.s_p.keys())
 
@@ -96,7 +95,7 @@ def draw_milp_graph(net, placed_sta, y):
 
     nx.draw_networkx_labels(draw_g_node, pos, labels=labels, font_color='w')
     station = list(itertools.compress(y, placed_sta))
-    plt.title(', '.join(station))
+    # plt.title(', '.join(station))
     fig = plt.gcf()
     ax = fig.gca()
     for i in range(len(sta)):

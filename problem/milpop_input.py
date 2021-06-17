@@ -4,12 +4,12 @@ We have set of station types and set of station places
 We need to place stations minimizing the stations cost
 """
 
-gate = {'pos': {0: (5, 5)},
+gate = {'pos': {0: (3, 5)},
         'lim': {0: float('inf')},
         }
 
 obj = {'pos': {1: (1, 5),
-               2: (4.5, 4),
+               2: (4.5, 3),
                3: (3, 4),
                },
        'lim': {1: 10,
@@ -19,16 +19,64 @@ obj = {'pos': {1: (1, 5),
                }}
 
 sta = {'pos': {1: (2, 4),
-               3: (2, 6),
+               2: (4, 3.5),
+               3: (3.5, 4.5),
                }}
 
-sta_type = {1: {'limit': 80, 'coverage': 3, 'link_distance': 6, 'cost': 70},
-            2: {'limit': 100, 'coverage': 3, 'link_distance': 6, 'cost': 75},
+sta_type = {1: {'limit': 80, 'coverage': 2, 'link_distance': 3, 'cost': 70},
+            2: {'limit': 100, 'coverage': 2, 'link_distance': 3, 'cost': 75},
             # 4: {'limit': 80, 'coverage': 1, 'link_distance': 6, 'cost': 70},
             # 5: {'limit': 100, 'coverage': 2, 'link_distance': 5, 'cost': 75},
             # 6: {'limit': 100, 'coverage': 2.5, 'link_distance': 7, 'cost': 85},
             }
 
+# gate = {'pos': {0: (14, 5)},
+#         'lim': {0: float('inf')},
+#         }
+#
+# obj = {'pos': {1: (1, 5),
+#                2: (4.5, 4),
+#                3: (3, 4),
+#                4: (6, 7),
+#                5: (3, 4),
+#                6: (7, 6.5),
+#                7: (9, 4),
+#                8: (11, 7),
+#                9: (12, 4),
+#                10: (13, 6.5),
+#                },
+#        'lim': {1: 10,
+#                2: 15,
+#                3: 17,
+#                4: 20,
+#                5: 17,
+#                6: 20,
+#                7: 17,
+#                8: 20,
+#                9: 17,
+#                10: 20,
+#                }}
+#
+# sta = {'pos': {1: (2, 5),
+#                2: (1, 6),
+#                3: (4, 5),
+#                4: (6, 6),
+#                5: (8, 5),
+#                6: (9, 5),
+#                7: (11, 6),
+#                8: (13, 5),
+#                }}
+#
+# sta_type = {1: {'limit': 80, 'coverage': 3, 'link_distance': 3, 'cost': 70},
+#             2: {'limit': 100, 'coverage': 3, 'link_distance': 6, 'cost': 75},
+#             3: {'limit': 80, 'coverage': 3, 'link_distance': 4, 'cost': 70},
+#             4: {'limit': 100, 'coverage': 3, 'link_distance': 2, 'cost': 75},
+#             5: {'limit': 80, 'coverage': 3, 'link_distance': 4, 'cost': 70},
+#             6: {'limit': 100, 'coverage': 3, 'link_distance': 6, 'cost': 75},
+            # 4: {'limit': 80, 'coverage': 1, 'link_distance': 6, 'cost': 70},
+            # 5: {'limit': 100, 'coverage': 2, 'link_distance': 5, 'cost': 75},
+            # 6: {'limit': 100, 'coverage': 2.5, 'link_distance': 7, 'cost': 85},
+            # }
 
 # gate = {'pos': {0: (7, 4)},
 #         'lim': {0: float('inf')},
