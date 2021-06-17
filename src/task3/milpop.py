@@ -3,7 +3,8 @@ Mixed-integer linear programming problem feasible solution
 """
 from itertools import product
 from itertools import permutations
-from typing import List
+from typing import List, Tuple
+from dataclasses import dataclass
 
 from problem.milpop_input import gate, obj, sta, sta_type
 from src.network import BSS
@@ -15,6 +16,15 @@ import pandas as pd
 import numpy as np
 
 
+@dataclass
+class MatrixVariableName:
+    """Variable name of objective function, equality matrix,
+    and inequality matrix """
+    z_name: List[str]
+    x_name: List[str]
+    y_name: List[str]
+    w_name: List[str]
+    count: int
 class MILPOP:
     """ Mixed-integer linear programming optimization problem"""
     def __init__(self, network):
@@ -47,7 +57,15 @@ class MILPOP:
         return [name + '_'.join(map(str, edge_name[i]))
                 for i in range(len(edge_name))]
 
-    def create_edge(self):
+    def create_edge(self) -> Tuple[List[str], List[str]]:
+        """
+        Create variable names. It is necessary to name columns
+        of pd.DataFrames.
+        Returns
+        -------
+            Z variable name X variable name
+        """
+
         # g_k = ''.join(map(str, list(self.net.g_p.keys())))
         # o_k = ''.join(map(str, list(self.net.o_p.keys())))
         # s_k = ''.join(map(str, list(self.net.s_p.keys())))
@@ -59,11 +77,14 @@ class MILPOP:
         s_s = [i for i in permutations(s_k, 2)]
         s_g = [i for i in product(s_k, g_k)]
 
-        o_s_name = self.value_name('z', o_s)
-        s_s_name = self.value_name('x', s_s)
-        s_g_name = self.value_name('x', s_g)
+        z_name = self.value_name('z', o_s) + self.value_name('z', s_s)
+        x_name = self.value_name('x', s_s) + self.value_name('x', s_g)
 
-        return o_s_name, s_s_name + s_g_name
+        y_name = ['y' + str(i) for i in self.net.s_p.keys()]
+
+        w_name = ['w' + str(i) for i in range(w_num)]
+
+        return z_name, x_name
 
     def create_value(self, w_num):
         z, x = self.create_edge()
@@ -226,6 +247,7 @@ class MILPOP:
          inequality matrix, linear inequality constraint vector;
          upper bounds vector; lower bounds vector
         """
+        # TODO: fix count of row num
         row_num = (len(self.net.g_p) + len(self.net.o_p) + len(self.net.s_p))
         [z_name, x_name, y_name, _] = self.create_value(row_num)
         # cost
