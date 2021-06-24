@@ -3,7 +3,8 @@ Mixed-integer linear programming problem feasible solution
 """
 from itertools import product
 from itertools import permutations
-from typing import List
+from typing import List, Tuple
+from dataclasses import dataclass
 
 from problem.milpop_input import gate, obj, sta, sta_type
 from src.network import BSS
@@ -13,6 +14,35 @@ import src.gurobi.milp_problem
 
 import pandas as pd
 import numpy as np
+
+
+@dataclass
+class MatrixVariableName:
+    """Variable name of objective function, equality matrix,
+    and inequality matrix """
+    z_name: List[str]
+    x_name: List[str]
+    y_name: List[str]
+    w_name: List[str]
+    count: int
+
+
+class ObjectiveFunction:
+    def __init__(self):
+        self.data = None
+        self.varname = None
+        self._z_index = None
+        self._x_index = None
+        self._y_index = None
+
+
+
+    def fill(self, data, varname) -> None:
+        self.data = pd.DataFrame(data, columns=columns)
+
+    def write_index(self):
+        # self._z_index = np.where(np.in1d(self.f.data.columns.values, z)))
+        pass
 
 
 class MILPOP:
@@ -33,7 +63,8 @@ class MILPOP:
         self._common_limit = None
         self._y_index = None
 
-        self.f = None
+        self.varname = None
+        self.f = ObjectiveFunction()
         self.int_constraints = None
         self.lower_bounds = None
         self.upper_bounds = None
@@ -47,10 +78,19 @@ class MILPOP:
         return [name + '_'.join(map(str, edge_name[i]))
                 for i in range(len(edge_name))]
 
-    def create_edge(self):
+    def create_edge(self) -> None:
+        """
+        Create variable names. It is necessary to name columns
+        of pd.DataFrames.
+        Returns
+        -------
+            Z variable name X variable name
+        """
+
         # g_k = ''.join(map(str, list(self.net.g_p.keys())))
         # o_k = ''.join(map(str, list(self.net.o_p.keys())))
         # s_k = ''.join(map(str, list(self.net.s_p.keys())))
+
         g_k = list(map(str, self.net.g_p.keys()))
         o_k = list(map(str, self.net.o_p.keys()))
         s_k = list(map(str, self.net.s_p.keys()))
@@ -59,18 +99,24 @@ class MILPOP:
         s_s = [i for i in permutations(s_k, 2)]
         s_g = [i for i in product(s_k, g_k)]
 
-        o_s_name = self.value_name('z', o_s)
-        s_s_name = self.value_name('x', s_s)
-        s_g_name = self.value_name('x', s_g)
+        z_name = self.value_name('z', o_s) + self.value_name('z', s_s)
+        x_name = self.value_name('x', s_s) + self.value_name('x', s_g)
 
-        return o_s_name, s_s_name + s_g_name
+        y_name = ['y' + str(i) for i in self.net.s_p.keys()]
 
-    def create_value(self, w_num):
-        z, x = self.create_edge()
-        y = ['y' + str(i) for i in self.net.s_p.keys()]
-        w = ['w' + str(i) for i in range(w_num)]
+        row_count = len(z_name) + len(x_name) + len(y_name)
+        w_name = ['w' + str(i) for i in range(row_count)]
 
-        return [z, x, y, w]
+        self.varname = MatrixVariableName(
+            z_name=z_name,
+            x_name=x_name,
+            y_name=y_name,
+            w_name=w_name,
+            count=row_count
+        )
+
+    def create_value(self, w_num) -> None:
+        self.varname = self.create_edge()
 
     def make_objective(self, z: list, x: list, y:list) -> None:
         """
@@ -79,19 +125,22 @@ class MILPOP:
         :param y: name of bool parameter vector
         :return: self.f
         """
+
         col = z + x + y
-        data = np.zeros([1, len(col)]).astype(int)
-        self.f = pd.DataFrame(data, columns=col)
-        column, = np.where(np.in1d(self.f.columns.values, y))
+        data = np.zeros([1, self.varname.count]).astype(int)
+        col = self.varname.z_name + self.varname.x_name + self.varname.y_name
+        self.f.data = pd.DataFrame(data, columns=col)
+        column, = np.where(np.in1d(self.f.data.columns.values,
+                                   self.varname.y_name))
         # Cost * y -> min
 
         # Objective function consist on only w values
-        self.f.iloc[0, column] = list(self.cost.values())
+        self.f.data.iloc[0, column] = list(self.cost.values())
 
         self.lower_bounds = np.zeros([1, len(col)]).astype(int)
         self.upper_bounds = np.ones([1, len(col)]).astype(int) * np.inf
 
-        self._z_index, = np.where(np.in1d(self.f.columns.values, z))
+        self._z_index, = np.where(np.in1d(self.f.data.columns.values, z))
         self.upper_bounds[0, self._z_index] = 1
 
         self._y_index, = np.where(np.in1d(self.f.columns.values, y))
@@ -226,8 +275,10 @@ class MILPOP:
          inequality matrix, linear inequality constraint vector;
          upper bounds vector; lower bounds vector
         """
-        row_num = (len(self.net.g_p) + len(self.net.o_p) + len(self.net.s_p))
-        [z_name, x_name, y_name, _] = self.create_value(row_num)
+        # TODO: fix count of row num
+        # row_num = (len(self.net.g_p) + len(self.net.o_p) + len(self.net.s_p))
+        # [z_name, x_name, y_name, _] = self.create_value(row_num)
+        self.create_edge()
         # cost
         _s_key = list(self.net.s_p.keys())
         _cost = list(j for i in [[k] * int(len(self.net.s_p) / len(self._cost))
@@ -235,7 +286,9 @@ class MILPOP:
         self.cost = {k + _s_key[0]: value
                      for k, value in enumerate(_cost)}
 
-        self.make_objective(z_name, x_name, y_name)
+        self.make_objective(self.varname.z_name,
+                            self.varname.x_name,
+                            self.varname.y_name)
         # limit
         _lim = list(j for i in [[k] * int(len(self.net.s_p)/len(self._lim))
                                 for k in self._lim] for j in i)
@@ -287,7 +340,7 @@ def get_milpop_solution(solver='gurobi'):
     solution = pd.Series(x, index=problem.f.columns.values).T
     placed_station = solution[y_solution].values
     placed_station.tolist()
-    draw_milp_graph(net, placed_station, y_solution)
+    # draw_milp_graph(net, placed_station, y_solution)
     return solution
 
 
