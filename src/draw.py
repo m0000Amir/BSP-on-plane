@@ -88,7 +88,7 @@ def draw_milp_graph(net, placed_sta, y):
                            nodelist=o_list, node_shape='o', node_size=200,
                            node_color='#07C6FF', linewidths=3)
     nx.draw_networkx_nodes(draw_g_node, pos, label='Размещенные станции',
-                           nodelist=sta, node_shape='o', node_size=300,
+                           nodelist=sta, node_shape='o', node_size=400,
                            node_color='#07C6FF', linewidths=3)
     nx.draw_networkx_edges(draw_g_node, pos,
                            arrowsize=20, edge_color='#898989')
@@ -98,7 +98,7 @@ def draw_milp_graph(net, placed_sta, y):
     for i in range(len(sta)):
         coverage = plt.Circle(net.s_p[sta[i]], cov[i], linestyle='--',
                               fill=True,
-                              alpha=0.1, color='#898989')
+                              alpha=0.2, color='#898989')
         ax.add_artist(coverage)
     ax.axis('equal')
     plt.legend(markerscale=0.3)
