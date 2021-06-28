@@ -7,6 +7,17 @@ import math
 import networkx as nx
 
 
+class WirelessNetwork:
+    """ This class is required to built """
+    def __init__(self, nodes):
+        self.gateway = nodes["gateway"]
+        self.object = nodes["object"]
+        self.station = nodes["station"]
+        self.graph = nx.DiGraph()
+        self.adjacency_matrix = None
+
+
+
 class BSS:
     def __init__(self, gate, obj, station, sta_type):
         self.g_p = gate['pos']
