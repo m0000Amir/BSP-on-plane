@@ -19,19 +19,19 @@ def draw_input_data(gate, obj, station):
     fig = plt.gcf()
     ax = fig.gca()
     g_x, g_y = get_coordinates(gtw_pos)
-    plt.plot(g_x, g_y, color='r', marker='s', markersize=20, linestyle='',
+    plt.plot(g_x, g_y, color='#07C6FF', marker='o', markersize=22, linestyle='',
              label='Координаты шлюза')
     [plt.annotate(i, xy=gtw_pos[i], xytext=gtw_pos[i], ha='center', va='center',
                   color='w') for i in gtw_pos]
 
     o_x, o_y = get_coordinates(obj_pos)
-    plt.plot(o_x, o_y, color='b', marker='o', markersize=20, linestyle='',
+    plt.plot(o_x, o_y, color='#07C6FF', marker='o', markersize=16, linestyle='',
              label='Координаты объектов')
     [plt.annotate(i, xy=obj_pos[i], xytext=obj_pos[i], ha='center', va='center',
                   color='w', size=12) for i in obj_pos]
 
     s_x, s_y = get_coordinates(sta_pos)
-    plt.plot(s_x, s_y, color='r', marker='X', markersize=20,
+    plt.plot(s_x, s_y, color='#07C6FF', marker='X', markersize=20,
              linestyle='', label='Координаты размещения станций')
     [plt.annotate(i, xy=sta_pos[i], xytext=sta_pos[i], ha='center', va='center',
                   color='w', size=12) for i in sta_pos]
@@ -40,7 +40,6 @@ def draw_input_data(gate, obj, station):
     ax.axis('equal')
     plt.grid()
     plt.show()
-
 
 
 def prepare_graph_for_draw(net, placed_sta):
@@ -84,28 +83,31 @@ def draw_milp_graph(net, placed_sta, y):
 
     nx.draw_networkx_nodes(draw_g_node, pos, label='Шлюз',
                            nodelist=g_list, node_shape='s',
-                           node_color='r', linewidths=3)
+                           node_color='#07C6FF', linewidths=3)
     nx.draw_networkx_nodes(draw_g_node, pos, label='Объекты',
-                           nodelist=o_list, node_shape='o',
-                           node_color='b', linewidths=3)
+                           nodelist=o_list, node_shape='o', node_size=200,
+                           node_color='#07C6FF', linewidths=3)
     nx.draw_networkx_nodes(draw_g_node, pos, label='Размещенные станции',
-                           nodelist=sta, node_shape='^', node_size=300,
-                           node_color='r', linewidths=3)
+                           nodelist=sta, node_shape='o', node_size=400,
+                           node_color='#07C6FF', linewidths=3)
     nx.draw_networkx_edges(draw_g_node, pos,
-                           arrowsize=20, edge_color='b')
+                           arrowsize=20, edge_color='#898989')
 
-    nx.draw_networkx_labels(draw_g_node, pos, labels=labels, font_color='w')
-    station = list(itertools.compress(y, placed_sta))
-    plt.title(', '.join(station))
     fig = plt.gcf()
     ax = fig.gca()
     for i in range(len(sta)):
-        coverage = plt.Circle(net.s_p[sta[i]], cov[i], linestyle='--', fill=True,
-                              alpha=0.1, color='r')
+        coverage = plt.Circle(net.s_p[sta[i]], cov[i], linestyle='--',
+                              fill=True,
+                              alpha=0.2, color='#898989')
         ax.add_artist(coverage)
     ax.axis('equal')
     plt.legend(markerscale=0.3)
     plt.grid()
+
+    nx.draw_networkx_labels(draw_g_node, pos, labels=labels, font_color='w')
+    station = list(itertools.compress(y, placed_sta))
+    # plt.title(', '.join(station))
+
     plt.show()
 
 
@@ -138,4 +140,5 @@ def draw_lp_graph(net):
 
     plt.grid()
     plt.show()
+
 

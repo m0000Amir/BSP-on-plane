@@ -1,0 +1,64 @@
+{
+  "gateway": [
+    {
+      "coordinates": [
+        3,
+        5
+      ],
+      "intensity": 10e6
+    }
+  ],
+  "device": [
+    {
+      "coordinates": [
+        1,
+        5
+      ],
+      "intensity": 10
+    },
+    {
+      "coordinates": [
+        4.5,
+        3
+      ],
+      "intensity": 15
+    },
+    {
+      "coordinates": [
+        3,
+        4
+      ],
+      "intensity": 210
+    }
+  ],
+  "station": {
+    "coordinates": [
+      [
+        2,
+        4
+      ],
+      [
+        4,
+        3.5
+      ],
+      [
+        3.5,
+        4.5
+      ]
+    ],
+    "type": [
+      {
+        "intensity": 80,
+        "coverage": 2,
+        "link_distance": 3,
+        "cost": 70
+      },
+      {
+        "intensity": 100,
+        "coverage": 2,
+        "link_distance": 3,
+        "cost": 75
+      }
+    ]
+  }
+}
