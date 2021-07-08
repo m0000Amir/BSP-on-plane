@@ -2,13 +2,17 @@
 import json
 
 
-from src.net import ProblemInputData, create_net, get_net_nodes, Network
+from src.net import InputData, prepare_input_data, Network
+from src.mipop.mipop import MIPOP
 
 with open("../problem.json") as f:
     data = json.load(f)
-    problem = ProblemInputData(gateway=data['gateway'],
-                               device=data['device'],
-                               station=data['station'])
-nodes = get_net_nodes(problem)
-net = Network(nodes)
+
+input_data = prepare_input_data(data)
+net = Network(input_data)
+MIPOP(net)
+
+
+print(net.adjacency_matrix)
+
 # create_net(nodes)

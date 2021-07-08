@@ -10,19 +10,23 @@ import numpy as np
 
 
 @dataclass
-class ProblemInputData:
-    gateway: list
-    device: list
+class InputData:
+    """ dataclass of input data (gateway, devices, and stations)"""
+    gateway: dict
+    device: dict
     station: dict
 
 
 class Network:
     """ Wireless network of the problem"""
-    def __init__(self, nodes: Tuple[Dict, Dict, Dict]):
+    def __init__(self, input_data: InputData):
         self.graph = nx.DiGraph()
-        self.gateway = nodes[0]
-        self.device = nodes[1]
-        self.station = nodes[2]
+        self.gateway = input_data.gateway
+        self.device = input_data.device
+        self.station = input_data.station
+        self.__d2s = None
+        self.__s2s = None
+        self.__s2g = None
         self._create()
 
     @staticmethod
@@ -41,21 +45,24 @@ class Network:
         """
 
         # Device To Station
-        for d2s in product(self.device.keys(), self.station.keys()):
+        self.__d2s = list(product(self.device.keys(), self.station.keys()))
+        for d2s in self.__d2s:
             if self.exist_edge(self.device[d2s[0]]['coordinates'],
                                self.station[d2s[1]]['coordinates'],
                                self.station[d2s[1]]['coverage']):
                 self.graph.add_edge(d2s[0], d2s[1])
 
         # Station To Station
-        for s2s in permutations(self.station.keys(), 2):
+        self.__s2s = list(permutations(self.station.keys(), 2))
+        for s2s in self.__s2s:
             if self.exist_edge(self.station[s2s[0]]['coordinates'],
                                self.station[s2s[1]]['coordinates'],
                                self.station[s2s[1]]['link_distance']):
                 self.graph.add_edge(s2s[0], s2s[1])
 
         # Station To Gateway
-        for s2g in product(self.station.keys(), self.gateway.keys()):
+        self.__s2g = list(product(self.station.keys(), self.gateway.keys()))
+        for s2g in self.__s2g:
             if self.exist_edge(self.station[s2g[0]]['coordinates'],
                                self.gateway[s2g[1]]['coordinates'],
                                self.station[s2g[0]]['link_distance']):
@@ -88,17 +95,29 @@ class Network:
         self._make_graph_edge()
         self.is_connected_graph()
 
+    @property
+    def get_device2station_edge(self):
+        return self.__d2s
 
-def get_net_nodes(problem: ProblemInputData) -> Tuple[Dict, Dict, Dict]:
+    @property
+    def get_station2station_edge(self):
+        return self.__s2s
+
+    @property
+    def get_station2gateway_edge(self):
+        return self.__s2g
+
+
+def prepare_input_data(data: Dict) -> InputData:
     """
-        Prepare nodes to network graph.
+    Prepare nodes to network graph.
         Node types:
             - gateway;
             - device;
             - station.
     Parameters
     ----------
-    problem
+    data
         input data of the problem
 
     Returns
@@ -106,33 +125,16 @@ def get_net_nodes(problem: ProblemInputData) -> Tuple[Dict, Dict, Dict]:
         gateway, device, station
 
     """
-    gateway = {k: value for k, value in enumerate(problem.gateway)}
-    device = {k + 1: value for k, value in enumerate(problem.device)}
+    gateway = {k: value for k, value in enumerate(data['gateway'])}
+    device = {k + 1: value for k, value in enumerate(data['device'])}
     station_coordinates = [{'coordinates': value} for value in
-                           problem.station['coordinates']]
+                           data['station']['coordinates']]
     _product_station = list(product(station_coordinates,
-                                    problem.station['type']))
+                                    data['station']['type']))
     station = {i + len(device) + 1: {**_product_station[i][0],
                                      **_product_station[i][1]}
                for i in range(len(_product_station))}
 
-    return gateway, device, station
+    return InputData(gateway=gateway, device=device, station=station)
 
-
-def create_net(problem: ProblemInputData) -> Network:
-    """
-    Prepare network for the problem
-
-    Parameters
-    ----------
-    problem
-        input data of the problem
-
-    Returns
-    -------
-        Network
-    """
-    gateway, device, station = get_net_nodes(problem)
-
-    return Network(gateway, device, station)
 
