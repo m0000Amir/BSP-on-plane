@@ -1,20 +1,14 @@
 """ This module consists graph of wireless network """
-from dataclasses import dataclass
+from __future__ import annotations
+from typing import List, TYPE_CHECKING
+if TYPE_CHECKING:
+    from problem_solution import InputData
 from itertools import product,  permutations
-from typing import Tuple, Dict, List
 import math
 
 
 import networkx as nx
 import numpy as np
-
-
-@dataclass
-class InputData:
-    """ dataclass of input data (gateway, devices, and stations)"""
-    gateway: dict
-    device: dict
-    station: dict
 
 
 class Network:
@@ -24,9 +18,10 @@ class Network:
         self.gateway = input_data.gateway
         self.device = input_data.device
         self.station = input_data.station
-        self.__d2s = None
-        self.__s2s = None
-        self.__s2g = None
+        self.type = input_data.type
+        # self.__d2s = None
+        # self.__s2s = None
+        # self.__s2g = None
         self._create()
 
     @staticmethod
@@ -45,24 +40,27 @@ class Network:
         """
 
         # Device To Station
-        self.__d2s = list(product(self.device.keys(), self.station.keys()))
-        for d2s in self.__d2s:
+        # self.__d2s = list(product(self.device.keys(), self.station.keys()))
+        # for d2s in self.__d2s:
+        for d2s in product(self.device.keys(), self.station.keys()):
             if self.exist_edge(self.device[d2s[0]]['coordinates'],
                                self.station[d2s[1]]['coordinates'],
                                self.station[d2s[1]]['coverage']):
                 self.graph.add_edge(d2s[0], d2s[1])
 
         # Station To Station
-        self.__s2s = list(permutations(self.station.keys(), 2))
-        for s2s in self.__s2s:
+        # self.__s2s = list(permutations(self.station.keys(), 2))
+        # for s2s in self.__s2s:
+        for s2s in permutations(self.station.keys(), 2):
             if self.exist_edge(self.station[s2s[0]]['coordinates'],
                                self.station[s2s[1]]['coordinates'],
                                self.station[s2s[1]]['link_distance']):
                 self.graph.add_edge(s2s[0], s2s[1])
 
         # Station To Gateway
-        self.__s2g = list(product(self.station.keys(), self.gateway.keys()))
-        for s2g in self.__s2g:
+        # self.__s2g = list(product(self.station.keys(), self.gateway.keys()))
+        # for s2g in self.__s2g:
+        for s2g in product(self.station.keys(), self.gateway.keys()):
             if self.exist_edge(self.station[s2g[0]]['coordinates'],
                                self.gateway[s2g[1]]['coordinates'],
                                self.station[s2g[0]]['link_distance']):
@@ -95,46 +93,16 @@ class Network:
         self._make_graph_edge()
         self.is_connected_graph()
 
-    @property
-    def get_device2station_edge(self):
-        return self.__d2s
-
-    @property
-    def get_station2station_edge(self):
-        return self.__s2s
-
-    @property
-    def get_station2gateway_edge(self):
-        return self.__s2g
-
-
-def prepare_input_data(data: Dict) -> InputData:
-    """
-    Prepare nodes to network graph.
-        Node types:
-            - gateway;
-            - device;
-            - station.
-    Parameters
-    ----------
-    data
-        input data of the problem
-
-    Returns
-    -------
-        gateway, device, station
-
-    """
-    gateway = {k: value for k, value in enumerate(data['gateway'])}
-    device = {k + 1: value for k, value in enumerate(data['device'])}
-    station_coordinates = [{'coordinates': value} for value in
-                           data['station']['coordinates']]
-    _product_station = list(product(station_coordinates,
-                                    data['station']['type']))
-    station = {i + len(device) + 1: {**_product_station[i][0],
-                                     **_product_station[i][1]}
-               for i in range(len(_product_station))}
-
-    return InputData(gateway=gateway, device=device, station=station)
+    # @property
+    # def get_device2station_edge(self):
+    #     return self.__d2s
+    #
+    # @property
+    # def get_station2station_edge(self):
+    #     return self.__s2s
+    #
+    # @property
+    # def get_station2gateway_edge(self):
+    #     return self.__s2g
 
 
