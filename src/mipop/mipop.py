@@ -159,6 +159,16 @@ class InequalityConstraints(Constraints):
 
 
 class MIPOP(Network):
+    """
+    MIXED INTEGER PROGRAMMING OPTIMIZATION PROBLEM
+    Here MIP model is prepared.
+    Model consists :
+        - input data;
+        - prepared matrix:
+            1 objective function;
+            2 equality constraints with right value vector;
+            3 inequality constraints with right value vector;
+    """
     def __init__(self, input_data: InputData):
         super().__init__(input_data)
         self.of = None
@@ -199,11 +209,18 @@ class MIPOP(Network):
         col_edge_name = list(product(self.device.keys(), _coordinate_n_sta))
         # TODO: delete permutate
         # aa = list(permutate(_coordinate_n_sta, 2))
-        a = list(permutations(station_point, 2))
+        aa = list(permutations(station_point, 2))
         var_edge_name = (
                 list(product(self.device.keys(), _coordinate_n_sta)) +
                 list(permutations(_coordinate_n_sta, 2)) +
                 list(product(_coordinate_n_sta, self.gateway.keys())))
+
+        # TODO: delete these lists
+        a = list(product(self.device.keys(), _coordinate_n_sta))
+        b = list(permutations(_coordinate_n_sta, 2))
+        c = list(product(_coordinate_n_sta, self.gateway.keys()))
+        #
+
         col_x = self._create_edge_var_name('d', col_edge_name, sep='->')
 
         col_y = _coordinate_n_sta
@@ -223,6 +240,7 @@ class MIPOP(Network):
         return variable_name, column_name
 
     def _create_matrix(self):
+        """ Main class method. It return MIP model matrices."""
         nodes = {'gateway': self.gateway,
                  'device': self.device,
                  'station': self.station}
