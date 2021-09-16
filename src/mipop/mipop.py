@@ -15,13 +15,18 @@ import pandas as pd
 
 class VarName:
     """ Names of problem variable"""
-    def __init__(self, x: List[str] = None, y: List[str] = None) -> None:
+    def __init__(self,
+                 z: List[str] = None,
+                 x: List[str] = None,
+                 y: List[str] = None) -> None:
+        self.name = np.array(z + x + y)
+        self.z = z
         self.x = x
         self.y = y
 
-    @property
-    def all(self):
-        return np.array(self.x + self.y)
+    # @property
+    # def all(self):
+    #     return np.array(self.x + self.y)
 
 
 class Matrix:
@@ -29,16 +34,16 @@ class Matrix:
     Matrix for object function, equality and inequality
     constraints.
     """
-    def __init__(self, var_name: VarName, col_name: VarName):
-        self.var_name = var_name
-        self.col_name = col_name
+    def __init__(self, var: VarName, column: VarName):
+        self.var = var
+        self.column = column
         self.data = None
 
 
 class OF(Matrix):
     """ Object function vector [1 x n]"""
-    def __init__(self, var_name: VarName, col_name: VarName, nodes: Dict):
-        super().__init__(var_name, col_name)
+    def __init__(self, var: VarName, column: VarName, nodes: Dict):
+        super().__init__(var, column)
         self.lower_bounds = None
         self.upper_bounds = None
         self.int_constraints = None
@@ -69,44 +74,46 @@ class OF(Matrix):
             None
 
         """
-        column = self.col_name.x + self.col_name.y
-        data = np.zeros([1, len(column)]).astype(int)
-        self.data = pd.DataFrame(data, columns=column)
+        # column = self.col_name.x + self.col_name.y
+        data = np.zeros([1, len(self.column.name)]).astype(int)
+        self.data = pd.DataFrame(data, columns=self.column.name)
 
         # Cost * y -> min
         y_col = np.where(np.in1d(self.data.columns.values,
-                                 self.col_name.y))
+                                 self.column.y))
         self.data.iloc[0, y_col] = [nodes['station'][i]['cost']
                                     for i in nodes['station'].keys()]
 
         # Bounds
-        self.lower_bounds = np.zeros([1, len(column)]).astype(int)
-        self.upper_bounds = np.ones([1, len(column)]).astype(int) * np.inf
+        self.lower_bounds = np.zeros([1, len(self.column.name)]).astype(int)
+        self.upper_bounds = np.ones([1, len(self.column.name)]).astype(int) * np.inf
 
         # TODO: change it
-        self.int_constraints = self.get_index(self.col_name.y)
+        self.int_constraints = self.get_index(self.column.y)
         self.upper_bounds[0, self.int_constraints] = 1
 
 
 class Constraints(Matrix):
     """ Matrix of constraints"""
-    def __init__(self, var_name: VarName, col_name: VarName,
+    def __init__(self, var: VarName, column: VarName,
                  adj_matrix: np.ndarray):
-        super().__init__(var_name, col_name)
+        super().__init__(var, column)
         self.b = None
         self.adj_matrix = adj_matrix
 
 
 class EqualityConstraints(Constraints):
     """ Matrix of equality constraints"""
-    def __init__(self, var_name: VarName, col_name: VarName,
+    def __init__(self, var: VarName, column: VarName,
                  nodes: Dict, adj_matrix: np.ndarray):
-        super().__init__(var_name, col_name, adj_matrix)
+        super().__init__(var, column, adj_matrix)
         self._create(nodes)
 
-    def _prepare_gateway_condition(self, nodes: Dict):
+    def _prepare_gateway_equality_condition(self, nodes: Dict) -> None:
         """
-        Prepare equality constraints for gateway
+        Prepare equality constraints for gateway.
+        Through the stations, all information flow from devices must be
+        available to the gateway.
 
         Parameters
         ----------
@@ -116,14 +123,79 @@ class EqualityConstraints(Constraints):
         -------
             None
         """
-        for i in list(nodes['gateway'].keys()):
+        for i in nodes['gateway'].keys():
             _row, = np.where(self.adj_matrix[:, i] == 1)
             _row_name = ['x' + str(_row[j]) + '_' +
                          str(i) for j in range(len(_row))]
-            _col, = np.where(np.in1d(self.var_name.all, _row_name))
+            _col, = np.where(np.in1d(self.var.name, _row_name))
             self.data.iloc[i, _col] = 1
-            self.b[i] = sum(self._common_limit[j] for j in list(self.net.o_p.keys()))
-        pass
+            self.b[i] = sum(nodes["device"][i]["intensity"]
+                            for i in nodes["device"].keys())
+
+    def _prepare_device_equality_condition(self, nodes: Dict) -> None:
+        """
+        Prepare equality constraints for gateway.
+
+        """
+        for i in nodes['device'].keys():
+            _row, = np.where(self.adj_matrix[i, :] == 1)
+            a = _row.tolist()
+            b = [j for j in _row.tolist()]
+            _row_name = ['z' + str(i) + '_' + str(j)
+                         for j in _row.tolist()]
+            _col, = np.where(np.in1d(self.var.name, _row_name))
+            self.data.iloc[i, _col] = 1
+            self.b[i] = 1
+
+    def _add_sta_input_link(self, i: int, nodes: Dict) -> None:
+        """
+        All station has incoming links from devices and other stations.
+        Using adjacency matrix, we add all input edges
+        """
+        _row, = np.where(self.adj_matrix[:, i] == 1)
+        for j in _row:
+            if int(j) in nodes["device"].keys():
+                var = "z"
+                value = nodes["device"][j]["intensity"]
+            else:
+                var = "x"
+                value = 1
+            _col_name = [var + str(int(j)) + "_" + str(i)]
+            _col = np.where(np.in1d(self.var.name, _col_name))
+            self.data.iloc[i, _col] = 1
+            # TODO: delete it
+            debug = 1
+
+    def _add_sta_output_link(self, i: int, nodes: Dict) -> None:
+        """
+        All station has outgoing links from devices and other stations.
+        Using adjacency matrix, we add all input edges
+        """
+        _row, = np.where(self.adj_matrix[:, i] == 1)
+        for j in _row:
+            if int(j) in nodes["device"].keys():
+                var = "z"
+                value = nodes["device"][j]["intensity"]
+            else:
+                var = "x"
+                value = 1
+            _col_name = [var + str(int(j)) + "_" + str(i)]
+            _col = np.where(np.in1d(self.var.name, _col_name))
+            self.data.iloc[i, _col] = 1
+            # TODO: delete it
+            debug = 1
+
+    def _prepare_sta_equality_condition(self, nodes: Dict):
+        for i in nodes["station"].keys():
+            """ Incoming links for station 'S_j'"""
+            self._add_sta_input_link(i, nodes)
+
+            """ Outgoing links for station 'S_j' """
+            _col, = np.where(self.adj_matrix[i, :] == 1)
+            # TODO: delete it
+            debug = 1
+
+        debug = 1
 
     def _create(self, nodes: Dict) -> None:
         """
@@ -141,20 +213,22 @@ class EqualityConstraints(Constraints):
         row_number = (len(nodes['gateway']) +
                       len(nodes['device']) +
                       len(nodes['station']))
-        column = self.col_name.x + self.col_name.y
-        data = np.zeros([row_number, len(column)]).astype(int)
+        column = self.column.x + self.column.x + self.column.y
+        data = np.zeros([row_number, len(self.column.name)]).astype(int)
         self.b = np.zeros(row_number)
-        self.data = pd.DataFrame(data, columns=column)
+        self.data = pd.DataFrame(data, columns=self.column.name)
 
-        self._prepare_gateway_condition(nodes)
+        self._prepare_gateway_equality_condition(nodes)
+        self._prepare_device_equality_condition(nodes)
+        self._prepare_sta_equality_condition(nodes)
 
-        pass
+        a  = 1
 
 
 class InequalityConstraints(Constraints):
     """ Matrix of inequality constraints"""
-    def __init__(self, var_name: VarName, col_name: VarName):
-        super().__init__(var_name, col_name)
+    def __init__(self, var: VarName, column: VarName):
+        super().__init__(var, column)
         pass
 
 
@@ -177,7 +251,7 @@ class MIPOP(Network):
         self._create_matrix()
 
     @staticmethod
-    def _create_edge_var_name(name: str, edge_name: List[Tuple[Any]],
+    def _create_edge_var_name(name: str, edge_name: List[Tuple[Any, ...]],
                               sep: str = '_'):
         return [name + sep.join(map(str, edge_name[i]))
                 for i in range(len(edge_name))]
@@ -189,13 +263,18 @@ class MIPOP(Network):
         -------
             Dict of variable names
         """
-        var_edge_name = (
-                list(product(self.device.keys(), self.station.keys())) +
-                list(permutations(self.station.keys(), 2)) +
-                list(product(self.station.keys(), self.gateway.keys())))
-        var_x = self._create_edge_var_name('x', var_edge_name)
+        # var_edge_name = (
+        #         list(product(self.device.keys(), self.station.keys())) +
+        #         list(permutations(self.station.keys(), 2)) +
+        #         list(product(self.station.keys(), self.gateway.keys())))
+        edge_z = list(product(self.device.keys(), self.station.keys()))
+        edge_x = (list(permutations(self.station.keys(), 2)) +
+                  list(product(self.station.keys(), self.gateway.keys())))
+        var_z = self._create_edge_var_name('z', edge_z)
+        var_x = self._create_edge_var_name('x', edge_x)
+
         var_y = ['y' + str(i) for i in self.station.keys()]
-        return {'x': var_x, 'y': var_y}
+        return {'z': var_z, 'x': var_x, 'y': var_y}
 
     def _get_column_name(self) -> Dict:
         point_count = int(len(self.station) / len(self.type))
@@ -209,33 +288,50 @@ class MIPOP(Network):
         col_edge_name = list(product(self.device.keys(), _coordinate_n_sta))
         # TODO: delete permutate
         # aa = list(permutate(_coordinate_n_sta, 2))
-        aa = list(permutations(station_point, 2))
-        var_edge_name = (
-                list(product(self.device.keys(), _coordinate_n_sta)) +
-                list(permutations(_coordinate_n_sta, 2)) +
-                list(product(_coordinate_n_sta, self.gateway.keys())))
+        # aa = list(permutations(station_point, 2))
+        # var_edge_name = (
+        #         list(product(self.device.keys(), _coordinate_n_sta)) +
+        #         list(permutations(_coordinate_n_sta, 2)) +
+        #         list(product(_coordinate_n_sta, self.gateway.keys())))
 
         # TODO: delete these lists
-        a = list(product(self.device.keys(), _coordinate_n_sta))
-        b = list(permutations(_coordinate_n_sta, 2))
-        c = list(product(_coordinate_n_sta, self.gateway.keys()))
+        device2sta = self._create_edge_var_name(
+            name='d',
+            edge_name=list(product(self.device.keys(), _coordinate_n_sta)),
+            sep='->')
+        sta2sta = self._create_edge_var_name(
+            name='',
+            edge_name=list(permutations(_coordinate_n_sta, 2)),
+            sep='->')
+        sta2gtw = self._create_edge_var_name(
+            name='',
+            edge_name=list(product(_coordinate_n_sta, self.gateway.keys())),
+            sep='->')
+        # var_edge_name = (device2sta + sta2sta + sta2gtw)
+
+        # a = list(product(self.device.keys(), _coordinate_n_sta))
+        # b = list(permutations(_coordinate_n_sta, 2))
+        # c = list(product(_coordinate_n_sta, self.gateway.keys()))
         #
 
-        col_x = self._create_edge_var_name('d', col_edge_name, sep='->')
+        # col_x = self._create_edge_var_name('d', col_edge_name, sep='->')
+        # col_x = self._create_edge_var_name('d', var_edge_name, sep='->')
 
-        col_y = _coordinate_n_sta
+        # col_y = _coordinate_n_sta
 
-        return {'x': col_x, 'y': col_y}
+        return {'z': device2sta,
+                'x': (sta2sta + sta2gtw),
+                'y': _coordinate_n_sta}
 
     def _create_names(self) -> Tuple[Dict[str], Dict[str]]:
         """ Create variable and column name"""
         variable_name = self._get_variable_name()
         column_name = self._get_column_name()
 
-        # TODO: delete this permutations
-        b = list(permutations(self.station.keys(), 2))
-
-        # TODO: rewrite for column name
+        # # TODO: delete this permutations
+        # b = list(permutations(self.station.keys(), 2))
+        #
+        # # TODO: rewrite for column name
 
         return variable_name, column_name
 
