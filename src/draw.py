@@ -1,6 +1,12 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+
+
 import itertools
+
+
+from src.net import Network
+from src.mipop.mipop import MIP
 
 
 def get_coordinates(position):
@@ -43,15 +49,21 @@ def draw_input_data(gate, obj, station):
 
 
 def prepare_graph_for_draw(net, placed_sta):
-    s_list = list(net.s_p.keys())
+    # s_list = list(net.s_p.keys())
+    s_list = list(net.station.keys())
 
-    pos = {**net.g_p, **net.o_p, **net.s_p}
-    draw_graph_node = net.G.copy()
+    all_points = {**net.gateway, **net.device, **net.station}
+    pos = dict(enumerate([all_points[i]["coordinates"]
+                          for i in range(len(all_points))]))
 
-    sta_node = list(net.s_p.keys())
-    cov_sta = net.coverage.values()
-    s_p_num = int(len(net.s_p)/len(net.c))
-    s = s_list[:s_p_num] * len(net.c)
+    draw_graph_node = net.graph.copy()
+
+    sta_node = list(net.station.keys())
+    # cov_sta = net.coverage.values()
+    cov_sta = [net.station[key]["coverage"] for key in net.station.keys()]
+    # s_p_num = int(len(net.s_p)/len(net.c))
+    s_p_num = int(len(s_list) / len(net.type))
+    s = s_list[:s_p_num] * len(net.type)
 
     sta = list(itertools.compress(s_list, placed_sta))
     cov = list(itertools.compress(cov_sta, placed_sta))
@@ -140,5 +152,51 @@ def draw_lp_graph(net):
 
     plt.grid()
     plt.show()
+
+
+def draw_mip_graph(net: Network, problem: MIP):
+    """
+    Draw network graph
+    :param net:  received graph of objects and stations
+    :param placed_sta: placed sta selectors after solving the problem
+    :return: ILP problem graph
+    """
+
+    g_list = list(net.gateway.keys())
+    o_list = list(net.device.keys())
+
+    draw_g_node, pos, labels, sta, cov = prepare_graph_for_draw(
+        net, problem.of.data[problem.of.column.y])
+
+    nx.draw_networkx_nodes(draw_g_node, pos, label='Шлюз',
+                           nodelist=g_list, node_shape='s',
+                           node_color='#07C6FF', linewidths=3)
+    nx.draw_networkx_nodes(draw_g_node, pos, label='Объекты',
+                           nodelist=o_list, node_shape='o', node_size=200,
+                           node_color='#07C6FF', linewidths=3)
+    nx.draw_networkx_nodes(draw_g_node, pos, label='Размещенные станции',
+                           nodelist=sta, node_shape='o', node_size=400,
+                           node_color='#07C6FF', linewidths=3)
+    nx.draw_networkx_edges(draw_g_node, pos,
+                           arrowsize=20, edge_color='#898989')
+
+    fig = plt.gcf()
+    ax = fig.gca()
+    for i in range(len(sta)):
+        coverage = plt.Circle(net.station[sta[i]]["coordinates"], cov[i], linestyle='--',
+                              fill=True,
+                              alpha=0.2, color='#898989')
+        ax.add_artist(coverage)
+    ax.axis('equal')
+    plt.legend(markerscale=0.3)
+    plt.grid()
+
+    nx.draw_networkx_labels(draw_g_node, pos, labels=labels, font_color='w')
+    station = list(itertools.compress(problem.of.column.y,
+                                      problem.of.data[problem.of.column.y]))
+    # plt.title(', '.join(station))
+
+    plt.show()
+
 
 
