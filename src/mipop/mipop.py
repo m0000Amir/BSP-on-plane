@@ -160,8 +160,8 @@ class EqualityConstraints(Constraints):
             else:
                 var = "x"
                 value = 1
-            _col_name = [var + str(int(j)) + "_" + str(i)]
-            _col = np.where(np.in1d(self.var.name, _col_name))
+            _var_name = [var + str(int(j)) + "_" + str(i)]
+            _col = np.where(np.in1d(self.var.name, _var_name))
             self.data.iloc[i, _col] = 1
             # TODO: delete it
             debug = 1
@@ -169,26 +169,20 @@ class EqualityConstraints(Constraints):
     def _add_sta_output_link(self, i: int, nodes: Dict) -> None:
         """
         All station has outgoing links from devices and other stations.
-        Using adjacency matrix, we add all input edges
+        Using adjacency matrix, we add all output edges
         """
-        _row, = np.where(self.adj_matrix[:, i] == 1)
-        for j in _row:
-            if int(j) in nodes["device"].keys():
-                var = "z"
-                value = nodes["device"][j]["intensity"]
-            else:
-                var = "x"
-                value = 1
-            _col_name = [var + str(int(j)) + "_" + str(i)]
-            _col = np.where(np.in1d(self.var.name, _col_name))
-            self.data.iloc[i, _col] = 1
-            # TODO: delete it
-            debug = 1
+        _col, = np.where(self.adj_matrix[i, :] == 1)
+        _var_name = [f"x{i}_{_col[j]}" for j in range(len(_col))]
+        _column, = np.where(np.in1d(self.var.name, _var_name))
+        self.data.iloc[i, _column] = -1
+        self.b[i] = 0
+        debug = 1
 
     def _prepare_sta_equality_condition(self, nodes: Dict):
         for i in nodes["station"].keys():
             """ Incoming links for station 'S_j'"""
             self._add_sta_input_link(i, nodes)
+            self._add_sta_output_link(i, nodes)
 
             """ Outgoing links for station 'S_j' """
             _col, = np.where(self.adj_matrix[i, :] == 1)
@@ -213,7 +207,7 @@ class EqualityConstraints(Constraints):
         row_number = (len(nodes['gateway']) +
                       len(nodes['device']) +
                       len(nodes['station']))
-        column = self.column.x + self.column.x + self.column.y
+        # column = self.column.z + self.column.x + self.column.y
         data = np.zeros([row_number, len(self.column.name)]).astype(int)
         self.b = np.zeros(row_number)
         self.data = pd.DataFrame(data, columns=self.column.name)
@@ -227,9 +221,68 @@ class EqualityConstraints(Constraints):
 
 class InequalityConstraints(Constraints):
     """ Matrix of inequality constraints"""
-    def __init__(self, var: VarName, column: VarName):
-        super().__init__(var, column)
-        pass
+
+    def __init__(self, var: VarName, column: VarName,
+                 nodes: Dict, adj_matrix: np.ndarray):
+        super().__init__(var, column, adj_matrix)
+        self._count = 0
+        self._create(nodes)
+
+    def counter(self) -> int:
+        count = self._count
+        self._count += 1
+        return count
+
+    def _add_sta_input_link(self, i: int, nodes: Dict) -> None:
+        """
+        All station has incoming links from devices and other stations.
+        Using adjacency matrix, we add all input edges
+        """
+        _row, = np.where(self.adj_matrix[:, i] == 1)
+        for j in _row:
+            if int(j) in nodes["device"].keys():
+                var = "z"
+                value = nodes["device"][j]["intensity"]
+            else:
+                var = "x"
+                value = 1
+            _var_name = [var + str(int(j)) + "_" + str(i)]
+            _col = np.where(np.in1d(self.var.name, _var_name))
+            self.data.iloc[i, _col] = 1
+
+    def _prepare_sta_inequality_condition(self, nodes: Dict):
+        for i in nodes["station"].keys():
+            data_row = self.counter()
+            self._add_sta_input_link(data_row, nodes)
+            _column = np.where(np.in1d(self.var.name, f"y{i}"))
+            self.data.iloc[data_row, _column] = (
+                    -1 * nodes["station"][i]["intensity"]
+            )
+        # for i in
+            debug = 1
+
+    def _create(self, nodes: Dict) -> None:
+        """
+        Create matrix and right vector of inequality constraints
+
+        Parameters
+        ----------
+        nodes - dict including gateway, devices, and stations
+
+        Returns
+        -------
+            None
+        """
+        # TODO: DANGER. rewrite 'row_number'
+        row_number = 1000
+        self.b = np.zeros(row_number)
+        data = np.zeros([row_number, len(self.column.name)]).astype(int)
+        self.data = pd.DataFrame(data, columns = self.column.name)
+        self._prepare_sta_inequality_condition(nodes)
+
+
+
+        debug = 1
 
 
 class MIPOP(Network):
@@ -347,7 +400,10 @@ class MIPOP(Network):
         self.of = OF(var_name, col_name, nodes)
         self.eq_constraints = EqualityConstraints(var_name, col_name,
                                                   nodes, self.adjacency_matrix)
-        self.ineq_constraints = InequalityConstraints(var_name)
+        self.ineq_constraints = InequalityConstraints(var_name,
+                                                      col_name,
+                                                      nodes,
+                                                      self.adjacency_matrix)
 
         pass
 
