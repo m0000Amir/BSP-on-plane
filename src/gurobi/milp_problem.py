@@ -12,13 +12,13 @@ def solve(problem: MIP):
     try:
         # Create a new model
         m = gp.Model("Optimal placement")
-        xvar_count = len(problem.of.upper_bounds[problem.of.upper_bounds == float('Inf')])
-        yvar_count = len(problem.of.upper_bounds[problem.of.upper_bounds == 1])
-        vtype = [GRB.CONTINUOUS] * xvar_count + [GRB.BINARY] * yvar_count
-        # vtype = ([GRB.BINARY] * len(problem.of.var.z) +
-        #          [GRB.CONTINUOUS] * len(problem.of.var.x) +
-        #          [GRB.BINARY] * len(problem.of.var.y)
-        #          )
+        # xvar_count = len(problem.of.upper_bounds[problem.of.upper_bounds == float('Inf')])
+        # yvar_count = len(problem.of.upper_bounds[problem.of.upper_bounds == 1])
+        # vtype = [GRB.CONTINUOUS] * xvar_count + [GRB.BINARY] * yvar_count
+        vtype = ([GRB.BINARY] * len(problem.of.var.z) +
+                 [GRB.CONTINUOUS] * len(problem.of.var.x) +
+                 [GRB.BINARY] * len(problem.of.var.y)
+                 )
         x = m.addMVar(shape=int(problem.of.data.size),
                       lb=0.0, ub=problem.of.upper_bounds,
                       vtype=vtype)
