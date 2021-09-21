@@ -12,7 +12,7 @@
     {
       "coordinates": [
         1,
-        4
+        5
       ],
       "intensity": 10
     },
@@ -28,7 +28,7 @@
         3,
         4
       ],
-      "intensity": 12
+      "intensity": 210
     }
   ],
   "station": {
@@ -48,15 +48,15 @@
     ],
     "type": [
       {
-        "intensity": 800,
-        "coverage": 5,
-        "link_distance": 5,
+        "intensity": 80,
+        "coverage": 2,
+        "link_distance": 3,
         "cost": 70
       },
       {
-        "intensity": 1000,
-        "coverage": 5,
-        "link_distance": 5,
+        "intensity": 100,
+        "coverage": 2,
+        "link_distance": 3,
         "cost": 75
       }
     ]

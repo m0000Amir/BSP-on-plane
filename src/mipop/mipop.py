@@ -468,20 +468,11 @@ def create_of(input_data: InputData,
                               for i in input_data.station.keys()]
     # Bounds
     of.lower_bounds = np.zeros([1, len(of.column.name)]).astype(int)
-    # of.upper_bounds = np.concatenate((
-    #     np.ones([len(of.var.z)]).astype(int) * np.inf,!
-    #     np.ones([len(of.var.x)]).astype(int) * np.inf,
-    #     np.ones([len(of.var.y)]).astype(int))
-    # )
-    of.upper_bounds = np.concatenate((
-            np.ones([len(of.var.z)]).astype(int),
-            np.ones([len(of.var.x)]).astype(int) * np.inf,
-            np.ones([len(of.var.y)]).astype(int))
-    )
+    of.upper_bounds = np.ones([1, len(of.column.name)]).astype(int) * np.inf
 
     of.int_constraints = np.where(np.in1d(of.data.columns.values,
                                           of.column.y))
-    # of.upper_bounds[0, of.int_constraints] = 1
+    of.upper_bounds[0, of.int_constraints] = 1
     return of
 
 
@@ -544,7 +535,6 @@ def create_eq_constraints(input_data: InputData,
         eq.b[i] = 1
 
     """
-    Prepare equality constraints for stations. Traffic must be move through a 
     Prepare equality constraints for stations. Traffic must be move through a 
     station.
     """
@@ -636,17 +626,11 @@ def create_ineq_constraints(input_data: InputData,
         ineq.data.iloc[data_row, _column] = (
                 -1 * input_data.station[i]["intensity"]
         )
-    for k in range(0, len(input_data.station), len(input_data.type)):
-        data_row = ineq.counter()
-        # y_name = [
-        #     f"y{k + len(input_data.device) + 1 + j * len(input_data.type)}"
-        #     for j in range(0, len(input_data.type))]
-        y_name = [
-            f"y{k + len(input_data.device) + 1 + j}"
-            for j in range(len(input_data.type))]
-        _col, = np.where(np.in1d(ineq.var.name, y_name))
-        ineq.data.iloc[data_row, _col] = 1
-        ineq.b[data_row] = 1
+        for k in range(0, len(input_data.type)):
+            data_row = ineq.counter()
+            _col, = np.where(np.in1d(ineq.data.columns.values, ineq.var.y))
+            ineq.data.iloc[data_row, _col] = 1
+            ineq.b[data_row] = 1
 
     # delete empty last rows
     _row = ineq.counter()
