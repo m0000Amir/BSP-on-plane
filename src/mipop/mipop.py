@@ -473,11 +473,12 @@ def create_of(input_data: InputData,
     #     np.ones([len(of.var.x)]).astype(int) * np.inf,
     #     np.ones([len(of.var.y)]).astype(int))
     # )
-    of.upper_bounds = np.concatenate((
-            np.ones([len(of.var.z)]).astype(int),
-            np.ones([len(of.var.x)]).astype(int) * np.inf,
-            np.ones([len(of.var.y)]).astype(int))
-    )
+    # of.upper_bounds = np.concatenate((
+    #         np.ones([len(of.var.z)]).astype(int),
+    #         np.ones([len(of.var.x)]).astype(int) * np.inf,
+    #         np.ones([len(of.var.y)]).astype(int))
+    # )
+    of.upper_bounds = np.ones([len(of.var.name)]).astype(int)
 
     of.int_constraints = np.where(np.in1d(of.data.columns.values,
                                           of.column.y))
@@ -506,9 +507,7 @@ def create_eq_constraints(input_data: InputData,
     eq = Constraints(var_name, col_name)
 
     # TODO: check number of row
-    row_number = (len(input_data.gateway) +
-                  len(input_data.device) +
-                  len(input_data.station))
+    row_number = 1000
 
     data = np.zeros([row_number, len(eq.column.name)]).astype(int)
     eq.b = np.zeros(row_number)
@@ -535,8 +534,19 @@ def create_eq_constraints(input_data: InputData,
     for i in input_data.device.keys():
         data_row = eq.counter()
         _row, = np.where(net.adj_matrix[i, :] == 1)
-        a = _row.tolist()
-        b = [j for j in _row.tolist()]
+        _row_name = ['z' + str(i) + '_' + str(j)
+                     for j in _row.tolist()]
+        _col, = np.where(np.in1d(eq.var.name, _row_name))
+        eq.data.iloc[data_row, _col] = 1
+        eq.b[i] = 1
+
+    """
+           Prepare equality constraints for stations. Any station has only 1 
+           outgoing links to station.
+       """
+    for i in input_data.station.keys():
+        data_row = eq.counter()
+        _row, = np.where(net.adj_matrix[i, :] == 1)
         _row_name = ['z' + str(i) + '_' + str(j)
                      for j in _row.tolist()]
         _col, = np.where(np.in1d(eq.var.name, _row_name))
@@ -575,7 +585,7 @@ def create_eq_constraints(input_data: InputData,
         _col, = np.where(net.adj_matrix[i, :] == 1)
         _var_name = [f"x{i}_{_col[j]}" for j in range(len(_col))]
         _column, = np.where(np.in1d(eq.var.name, _var_name))
-        eq.data.iloc[i, _column] = -1
+        eq.data.iloc[data_row, _column] = -1
         eq.b[i] = 0
 
     # delete empty last rows
@@ -636,6 +646,23 @@ def create_ineq_constraints(input_data: InputData,
         ineq.data.iloc[data_row, _column] = (
                 -1 * input_data.station[i]["intensity"]
         )
+
+    """ Outgoing traffic is no more than intensity of station service time"""
+    sta2sta_edge = (list(permutations(input_data.station.keys(), 2)) +
+                    list(product(input_data.station.keys(),
+                                 input_data.gateway.keys())))
+    for i, j in sta2sta_edge:
+        data_row = ineq.counter()
+        x_var = ['x' + str(int(i)) + "_" + str(j)]
+        z_var = ['z' + str(int(i)) + "_" + str(j)]
+        _x_col = np.where(np.in1d(ineq.var.name, x_var))
+        _z_col = np.where(np.in1d(ineq.var.name, z_var))
+        ineq.data.iloc[data_row, _x_col] = 1
+        ineq.data.iloc[data_row, _z_col] = (-1 *
+                                            input_data.station[i]["intensity"])
+        ineq.b[data_row] = 0
+
+    """In each point coordinate must be only one placed station"""
     for k in range(0, len(input_data.station), len(input_data.type)):
         data_row = ineq.counter()
         # y_name = [

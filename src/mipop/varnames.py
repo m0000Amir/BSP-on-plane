@@ -22,14 +22,15 @@ def get_variable_name(input_data: InputData) -> Dict:
     -------
         Dict of variable names
     """
-    edge_z = list(product(input_data.device.keys(),
-                          input_data.station.keys()))
-    edge_x = (list(permutations(input_data.station.keys(), 2)) +
-              list(product(input_data.station.keys(),
-                           input_data.gateway.keys())))
+    device_edge = list(product(input_data.device.keys(),
+                               input_data.station.keys()))
+    sta_edge = (list(permutations(input_data.station.keys(), 2)) +
+                list(product(input_data.station.keys(),
+                             input_data.gateway.keys())))
 
-    var_z = create_edge_var_name('z', edge_z)
-    var_x = create_edge_var_name('x', edge_x)
+    var_z = (create_edge_var_name('z', device_edge) +
+             create_edge_var_name('z', sta_edge))
+    var_x = create_edge_var_name('x', sta_edge)
 
     var_y = ['y' + str(i) for i in input_data.station.keys()]
     return {'z': var_z, 'x': var_x, 'y': var_y}
@@ -43,26 +44,51 @@ def get_column_name(input_data: InputData) -> Dict:
     _sp = list(product(station_point,
                        list(map(lambda x: x + 1, input_data.type.keys()))))
 
-    _coordinate_n_sta = [f'c{_[0]}_s{_[1]}' for _ in _sp]
-    col_edge_name = list(product(input_data.device.keys(), _coordinate_n_sta))
+    y_column = [f'c{_[0]}_s{_[1]}' for _ in _sp]
+    col_edge_name = list(product(input_data.device.keys(), y_column))
 
     # TODO: delete these lists
-    device2sta = create_edge_var_name(
-        name='d',
-        edge_name=list(product(input_data.device.keys(), _coordinate_n_sta)),
-        sep='->')
-    sta2sta = create_edge_var_name(
-        name='',
-        edge_name=list(permutations(_coordinate_n_sta, 2)),
-        sep='->')
-    sta2gtw = create_edge_var_name(
-        name='',
-        edge_name=list(product(_coordinate_n_sta, input_data.gateway.keys())),
-        sep='->')
+    # device2sta = create_edge_var_name(
+    #     name='d',
+    #     edge_name=list(product(input_data.device.keys(), y_column)),
+    #     sep='->')
+    # sta2sta = create_edge_var_name(
+    #     name='',
+    #     edge_name=list(permutations(y_column, 2)),
+    #     sep='->')
+    # sta2gtw = create_edge_var_name(
+    #     name='',
+    #     edge_name=list(product(y_column, input_data.gateway.keys())),
+    #     sep='->')
+    z_column = (
+            create_edge_var_name(
+                name='z_d',
+                edge_name=list(product(input_data.device.keys(),
+                                       y_column)),
+                sep='->') +
+            create_edge_var_name(
+                name='z_',
+                edge_name=list(permutations(y_column, 2)),
+                sep='->') +
+            create_edge_var_name(
+                    name='z_',
+                    edge_name=list(product(y_column, input_data.gateway.keys())),
+                    sep='->')
+            )
+    x_column = (
+        create_edge_var_name(
+            name='x_',
+            edge_name=list(permutations(y_column, 2)),
+            sep='->') +
+        create_edge_var_name(
+                name='x_',
+                edge_name=list(product(y_column, input_data.gateway.keys())),
+                sep='->')
+    )
 
-    return {'z': device2sta,
-            'x': (sta2sta + sta2gtw),
-            'y': _coordinate_n_sta}
+    return {'z': z_column,
+            'x': x_column,
+            'y': y_column}
 
 
 def create_names(input_data: InputData) -> Tuple[Dict[str], Dict[str]]:
