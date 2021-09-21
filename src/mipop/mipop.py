@@ -24,10 +24,6 @@ class VarName:
         self.x = x
         self.y = y
 
-    # @property
-    # def all(self):
-    #     return np.array(self.x + self.y)
-
 
 class Matrix:
     """
@@ -472,7 +468,12 @@ def create_of(input_data: InputData,
 
     of.int_constraints = np.where(np.in1d(of.data.columns.values,
                                           of.column.y))
-    of.upper_bounds[0, of.int_constraints] = 1
+    # of.upper_bounds[0, of.int_constraints] = 1
+    of.upper_bounds = np.concatenate((
+            np.ones([len(of.var.z)]).astype(int),
+            np.ones([len(of.var.x)]).astype(int) * np.inf,
+            np.ones([len(of.var.y)]).astype(int))
+    )
     return of
 
 
@@ -568,7 +569,7 @@ def create_eq_constraints(input_data: InputData,
         eq.data.iloc[i, _column] = -1
         eq.b[i] = 0
 
-    # delete empty last rows
+    # deleting empty last rows
     _row = eq.counter()
     eq.data = eq.data.head(_row)
     eq.b = eq.b[:_row]
@@ -626,13 +627,32 @@ def create_ineq_constraints(input_data: InputData,
         ineq.data.iloc[data_row, _column] = (
                 -1 * input_data.station[i]["intensity"]
         )
-        for k in range(0, len(input_data.type)):
-            data_row = ineq.counter()
-            _col, = np.where(np.in1d(ineq.data.columns.values, ineq.var.y))
-            ineq.data.iloc[data_row, _col] = 1
-            ineq.b[data_row] = 1
 
-    # delete empty last rows
+    """ All traffic from sta is no more than intensity of station service time"""
+    for i in input_data.station.keys():
+        data_row = ineq.counter()
+        _row, = np.where(net.adj_matrix[i, :] == 1)
+        for j in _row:
+            _var_name = [f"x{i}_{j}"]
+            _col = np.where(np.in1d(ineq.var.name, _var_name))
+            ineq.data.iloc[data_row, _col] = 1
+
+        _column = np.where(np.in1d(ineq.var.name, f"y{i}"))
+        ineq.data.iloc[data_row, _column] = (
+                -1 * input_data.station[i]["intensity"]
+        )
+
+    """In each point coordinate must be only one placed station"""
+    for k in range(0, len(input_data.station), len(input_data.type)):
+        data_row = ineq.counter()
+        y_name = [
+            f"y{k + len(input_data.device) + 1 + j}"
+            for j in range(len(input_data.type))]
+        _col, = np.where(np.in1d(ineq.var.name, y_name))
+        ineq.data.iloc[data_row, _col] = 1
+        ineq.b[data_row] = 1
+
+    # deleting empty last rows
     _row = ineq.counter()
     ineq.data = ineq.data.head(_row)
     ineq.b = ineq.b[:_row]

@@ -14,9 +14,9 @@ def solve(problem: MIP):
         m = gp.Model("Optimal placement")
         # print(len(problem.upper_bounds[problem.upper_bounds == 1]))
         # print(len(problem.upper_bounds[problem.upper_bounds == float('Inf')]))
-        xvar_count = len(problem.of.upper_bounds[problem.of.upper_bounds == float('Inf')])
-        yvar_count = len(problem.of.upper_bounds[problem.of.upper_bounds == 1])
-        vtype = [GRB.CONTINUOUS] * xvar_count + [GRB.BINARY] * yvar_count
+        # xvar_count = len(problem.of.upper_bounds[problem.of.upper_bounds == float('Inf')])
+        # yvar_count = len(problem.of.upper_bounds[problem.of.upper_bounds == 1])
+        # vtype = [GRB.CONTINUOUS] * xvar_count + [GRB.BINARY] * yvar_count
         # x = m.addMVar(shape=xvar_count,
         #               lb=0,
         #               ub=GRB.INFINITY,
@@ -28,6 +28,11 @@ def solve(problem: MIP):
         #               vtype=GRB.BINARY,
         #               name='y')
         # aa = [GRB.INFINITY]
+        vtype = ([GRB.BINARY] * len(problem.of.var.z) +
+                 [GRB.INTEGER] * len(problem.of.var.x) +
+                 [GRB.BINARY] * len(problem.of.var.y)
+                 )
+
         x = m.addMVar(shape=int(problem.of.data.size),
                       lb=0.0, ub=problem.of.upper_bounds,
                       vtype=vtype)

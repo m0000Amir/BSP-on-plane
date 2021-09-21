@@ -1,9 +1,12 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import PIL
 
 
 import itertools
+from itertools import product,  permutations
 
+import pandas as pd
 
 from src.net import Network
 from src.mipop.mipop import MIP
@@ -154,43 +157,138 @@ def draw_lp_graph(net):
     plt.show()
 
 
-def draw_mip_graph(net: Network, problem: MIP):
+def prepare_draw_graph(net: Network, problem: MIP, solution: pd.Series
+                       ) -> nx.DiGraph:
+    draw_graph = net.graph.copy()
+    draw_graph = nx.DiGraph()
+
+    edge_z = list(product(net.device.keys(),
+                          net.station.keys()))
+    edge_x = (list(permutations(net.station.keys(), 2)) +
+              list(product(net.station.keys(),
+                           net.gateway.keys())))
+
+    y_node = list(zip(problem.of.column.y, problem.of.var.y))
+    solution_variable = edge_z + edge_x + y_node
+    labels = {}
+    for k in range(len(solution)):
+        if solution_variable[k][0] == solution.index[k]:
+            labels.update({solution_variable[k][1][1:]: solution[k]})
+        else:
+            if solution[k] != 0:
+                i, j = solution_variable[k]
+                draw_graph.add_edge(i, j)
+    _sta = [i+1 for i in range(len(net.type))] * int(
+        len(net.station)/len(net.type))
+    sta = dict(zip(labels.keys(), _sta))
+
+    all_points = {**net.gateway, **net.device, **net.station}
+    draw_nodes = list(draw_graph.nodes())
+    draw_nodes.sort()
+    coordinates = [all_points[i]["coordinates"] for i in draw_nodes]
+    pos = dict(zip(draw_nodes, coordinates))
+
+    debug = 1
+
+    # , sta, cov
+    return [draw_graph, pos, labels, sta]
+
+
+def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
     """
-    Draw network graph
-    :param net:  received graph of objects and stations
-    :param placed_sta: placed sta selectors after solving the problem
-    :return: ILP problem graph
+
+    Parameters
+    ----------
+    net - received graph of devices and stations
+    problem - MIP problem
+    solution - obtained placement
+
+    Returns
+    -------
+        None
     """
+
+    fig, ax = plt.subplots()
+    plt.grid()
+    plt.axis()
+    # limits = plt.axis("on")   # turns on axis
+    ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+
 
     g_list = list(net.gateway.keys())
-    o_list = list(net.device.keys())
+    d_list = list(net.device.keys())
 
-    draw_g_node, pos, labels, sta, cov = prepare_graph_for_draw(
+    draw_g_node, pos, labels, sta1, cov = prepare_graph_for_draw(
         net, problem.of.data[problem.of.column.y])
 
-    nx.draw_networkx_nodes(draw_g_node, pos, label='Шлюз',
-                           nodelist=g_list, node_shape='s',
-                           node_color='#07C6FF', linewidths=3)
-    nx.draw_networkx_nodes(draw_g_node, pos, label='Объекты',
-                           nodelist=o_list, node_shape='o', node_size=200,
-                           node_color='#07C6FF', linewidths=3)
-    nx.draw_networkx_nodes(draw_g_node, pos, label='Размещенные станции',
-                           nodelist=sta, node_shape='o', node_size=400,
-                           node_color='#07C6FF', linewidths=3)
-    nx.draw_networkx_edges(draw_g_node, pos,
-                           arrowsize=20, edge_color='#898989')
+    draw_graph, pos, labels, sta = prepare_draw_graph(net, problem, solution)
+    s_list = [i for i in net.station.keys() if i in pos.keys()]
+    # nx.draw_networkx_nodes(draw_graph, pos, label='Шлюз',
+    #                        nodelist=g_list, node_shape='s',
+    #                        node_color='#07C6FF', linewidths=3)
+    # nx.draw_networkx_nodes(draw_graph, pos, label='Объекты',
+    #                        nodelist=d_list, node_shape='o', node_size=200,
+    #                        node_color='#07C6FF', linewidths=3)
+    # nx.draw_networkx_nodes(draw_graph, pos, label='Размещенные станции',
+    #                        nodelist=s_list, node_shape='o', node_size=400,
+    #                        node_color='#07C6FF', linewidths=3)
+    # nx.draw_networkx_edges(draw_graph, pos,
+    #                        arrowsize=20, edge_color='#898989')
 
-    fig = plt.gcf()
-    ax = fig.gca()
+    icons = {
+        "gateway": "src/drawing/icons/gateway.png",
+        "device": "src/drawing/icons/device.png",
+        "bs": "src/drawing/icons/bs.png",
+    }
+
+    # Load images
+    images = {k: PIL.Image.open(fname) for k, fname in icons.items()}
+
+    G = nx.Graph()
     for i in range(len(sta)):
-        coverage = plt.Circle(net.station[sta[i]]["coordinates"], cov[i], linestyle='--',
-                              fill=True,
-                              alpha=0.2, color='#898989')
-        ax.add_artist(coverage)
-    ax.axis('equal')
-    plt.legend(markerscale=0.3)
-    plt.grid()
+        if sta1[i] in pos.keys():
+            coverage = plt.Circle(net.station[sta1[i]]["coordinates"],
+                                  cov[i],
+                                  linestyle='--',
+                                  fill=True,
+                                  alpha=0.2, color='#898989')
+            ax.add_patch(coverage)
 
+    for i in pos.keys():
+        if i in net.gateway.keys():
+            G.add_node(i, image=images["gateway"])
+        elif i in net.device.keys():
+            G.add_node(i, image=images["device"])
+        elif i in net.station.keys():
+            G.add_node(i, image=images["bs"])
+    nx.draw_networkx_nodes(G, pos, node_size=.01, ax=ax)
+
+    # Transform from data coordinates (scaled between xlim and ylim)
+    # to display coordinates
+    tr_figure = ax.transData.transform
+    # Transform from display to figure coordinates
+    tr_axes = fig.transFigure.inverted().transform
+
+    # Select the size of the image (relative to the X axis)
+    icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.015
+    icon_center = icon_size / 2.0
+
+    # Add the respective image to each node
+    for n in G.nodes:
+        xf, yf = tr_figure(pos[n])
+        xa, ya = tr_axes((xf, yf))
+        # get overlapped axes and plot icon
+        a = plt.axes([xa - icon_center, ya - icon_center, icon_size, icon_size])
+        a.imshow(G.nodes[n]["image"])
+        a.axis("off")
+
+    # turn the axis on
+    ax.set_axis_on()
+    ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+    plt.show()
+    plt.legend(markerscale=0.3)
+
+    ax.axis()
     nx.draw_networkx_labels(draw_g_node, pos, labels=labels, font_color='w')
     station = list(itertools.compress(problem.of.column.y,
                                       problem.of.data[problem.of.column.y]))

@@ -6,7 +6,7 @@ from itertools import permutations
 
 from problem.milpop_input import gate, obj, sta, sta_type
 from src.network import BSS
-from src.draw import draw_input_data, draw_milp_graph
+from src.drawing.draw import draw_input_data, draw_milp_graph
 import src.matlab.milp_problem
 import src.gurobi.milp_problem
 

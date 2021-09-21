@@ -6,7 +6,7 @@ from itertools import permutations
 
 from problem.lppfs_input import gate, obj, sta, sta_set
 from src.network import BSS
-from src.draw import draw_input_data, draw_lp_graph
+from src.drawing.draw import draw_input_data, draw_lp_graph
 from src.lp_problem import solve_lp_problem
 
 import pandas as pd
