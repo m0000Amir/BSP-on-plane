@@ -10,7 +10,7 @@ import pandas as pd
 import src.gurobi.milp_problem
 import src.matlab.milp_problem
 from src.mipop.mipop import create_mipop
-from src.drawing.draw import draw_mip_graph
+from src.drawing.draw import draw_mip_graph, draw_input_data
 from src.net import create_graph
 
 
@@ -84,6 +84,8 @@ if __name__ == "__main__":
     solution = pd.Series(x, index=problem.of.data.columns.values).T
     placed_station = solution[problem.of.column.y].values
     # placed_station.tolist()
+
+    draw_input_data(net)
     draw_mip_graph(net, problem, solution)
 
     debug = 1
