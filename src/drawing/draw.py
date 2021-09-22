@@ -231,9 +231,6 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
                            edge_color='#000000')
     # Transform from data coordinates (scaled between xlim and ylim)
     # to display coordinates
-    # ax.set_ylim(1, 7)
-    # ax.set_xlim(0, 6)
-    # ax.axis('scaled')
     tr_figure = ax.transData.transform
     # Transform from display to figure coordinates
     tr_axes = fig.transFigure.inverted().transform
