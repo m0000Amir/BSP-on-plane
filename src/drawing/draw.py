@@ -9,8 +9,6 @@ from itertools import product,  permutations
 from typing import List, Dict, Union
 import math
 
-
-
 from src.net import Network
 from src.mipop.mipop import MIP
 
@@ -67,6 +65,7 @@ def draw_input_data(net: Network) -> None:
     # plt.rc('font', size=20)
     ax.axis('equal')
     plt.grid()
+    plt.savefig('bsp_input_data.png')
     plt.show()
 
 
@@ -274,9 +273,9 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
     #                               fill=True,
     #                               alpha=0.1, color='r')
     #         ax.add_patch(link_distance)
-
+    plt.savefig('bsp_solution.png')
     plt.show()
-    debug = 1
+
 
 
 
