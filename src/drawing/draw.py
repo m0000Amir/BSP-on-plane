@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import PIL
 
 
@@ -145,7 +146,8 @@ def prepare_draw_graph(net: Network, problem: MIP, solution: pd.Series
                      net.station[j]["coordinates"][0]) ** 2 +
                     (net.station[i]["coordinates"][1] -
                      net.station[j]["coordinates"][1]) ** 2)
-                if _distance <= net.station[i]["link_distance"]:
+                if ((_distance <= net.station[i]["link_distance"])
+                        and (_distance <= net.station[j]["link_distance"])):
                     draw_link_distance.add_edge(i, j)
                     draw_link_distance_pos.update(
                         {i: net.station[i]["coordinates"]})
@@ -157,6 +159,8 @@ def prepare_draw_graph(net: Network, problem: MIP, solution: pd.Series
                      net.gateway[j]["coordinates"][1]) ** 2)
                 if _distance <= net.station[i]["link_distance"]:
                     draw_link_distance.add_edge(i, j)
+                    draw_link_distance_pos.update(
+                        {i: net.station[i]["coordinates"]})
     draw_link_distance_pos.update({0: net.gateway[0]["coordinates"]})
 
     return [draw_graph, draw_link_distance, pos, draw_link_distance_pos, sta]

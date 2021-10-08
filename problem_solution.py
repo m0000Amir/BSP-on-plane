@@ -58,7 +58,7 @@ def prepare_input_data(data: Dict) -> InputData:
 
 
 if __name__ == "__main__":
-    with open("./problem.json") as f:
+    with open("./problem_test_2.json") as f:
         data_from_json = json.load(f)
 
     solver = "gurobi"
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     net = create_graph(input_data)
 
     problem = create_mipop(input_data, net)
-
+    draw_input_data(net)
     if solver == 'gurobi':
         x = src.gurobi.milp_problem.solve(problem)
     else:
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     placed_station = solution[problem.of.column.y].values
     # placed_station.tolist()
 
-    draw_input_data(net)
+
     draw_mip_graph(net, problem, solution)
 
     debug = 1

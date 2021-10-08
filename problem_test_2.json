@@ -1,0 +1,99 @@
+{
+  "gateway": [
+    {
+      "coordinates": [
+        2.5,
+        5
+      ],
+      "intensity": 10e6
+    }
+  ],
+  "device": [
+    {
+      "coordinates": [
+        1,
+        5
+      ],
+      "intensity": 10
+    },
+    {
+      "coordinates": [
+        4.6,
+        2.9
+      ],
+      "intensity": 13
+    },
+    {
+      "coordinates": [
+        1.8,
+        2.8
+      ],
+      "intensity": 12
+    },
+    {
+      "coordinates": [
+        4,
+        6
+      ],
+      "intensity": 12
+    },
+    {
+      "coordinates": [
+        3.2,
+        2.1
+      ],
+      "intensity": 12
+    }
+
+  ],
+  "station": {
+    "coordinates": [
+      [
+        2,
+        4
+      ],
+      [
+        4,
+        3.5
+      ],
+      [
+        3.5,
+        4.5
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        2.5,
+        4
+      ],
+      [
+        3.2,
+        3
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        3.6,
+        2.5
+      ]
+    ],
+    "type": [
+      {
+        "intensity": 800,
+        "coverage": 1.6,
+        "link_distance": 1.5,
+        "cost": 70
+      },
+      {
+        "intensity": 1000,
+        "coverage": 2,
+        "link_distance": 1.5,
+        "cost": 75
+      }
+    ]
+  }
+}
