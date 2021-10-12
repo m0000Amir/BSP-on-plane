@@ -29,7 +29,7 @@ def solve(problem: MIP):
         #               name='y')
         # aa = [GRB.INFINITY]
         vtype = ([GRB.BINARY] * len(problem.of.var.z) +
-                 [GRB.INTEGER] * len(problem.of.var.x) +
+                 [GRB.CONTINUOUS] * len(problem.of.var.x) +
                  [GRB.BINARY] * len(problem.of.var.y)
                  )
 

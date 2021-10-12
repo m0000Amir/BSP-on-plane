@@ -468,10 +468,13 @@ def create_of(input_data: InputData,
 
     of.int_constraints = np.where(np.in1d(of.data.columns.values,
                                           of.column.y))
+    __sta2sta = [input_data.station[i]["intensity"] for i in input_data.station.keys()
+                 for j in input_data.station.keys() if i != j]
+    __sta2gtw = [input_data.station[i]["intensity"] for i in input_data.station.keys()]
     # of.upper_bounds[0, of.int_constraints] = 1
     of.upper_bounds = np.concatenate((
             np.ones([len(of.var.z)]).astype(int),
-            np.ones([len(of.var.x)]).astype(int) * np.inf,
+            np.array(__sta2sta + __sta2gtw).astype(int),
             np.ones([len(of.var.y)]).astype(int))
     )
     return of
