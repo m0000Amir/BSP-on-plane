@@ -30,8 +30,6 @@ def get_variable_name(input_data: InputData,
          Dict of variable names
     """
 
-    edge_z = list(product(input_data.device.keys(),
-                          input_data.station.keys()))
     _x_nodes = (list(permutations(input_data.station.keys(), 2)) +
                 list(product(input_data.station.keys(),
                              input_data.gateway.keys())))

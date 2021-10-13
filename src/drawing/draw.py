@@ -108,18 +108,19 @@ def prepare_draw_graph(net: Network, problem: MIP, solution: pd.Series
     draw_graph = nx.DiGraph()
     draw_link_distance = nx.DiGraph()
 
-    edge_z = list(product(net.device.keys(),
-                          net.station.keys()))
-    edge_x = (list(permutations(net.station.keys(), 2)) +
-              list(product(net.station.keys(),
-                           net.gateway.keys())))
+
+    _x_nodes = (list(permutations(net.station.keys(), 2)) +
+                list(product(net.station.keys(),
+                             net.gateway.keys())))
+    edge_z = [(i, j) for i, j in product(net.device.keys(),
+                                         net.station.keys())
+              if net.adj_matrix[i, j] == 1]
+    edge_x = [(i, j) for i, j in _x_nodes if net.adj_matrix[i, j] == 1]
 
     y_node = list(zip(problem.of.column.y, problem.of.var.y))
     solution_variable = edge_z + edge_x + y_node
     labels = {}
     for k in range(len(solution)):
-        print(solution_variable[k][0])
-        print(solution.index[k])
         if solution_variable[k][0] == solution.index[k]:
             labels.update({solution_variable[k][1][1:]: solution[k]})
         else:
@@ -243,7 +244,7 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
     tr_axes = fig.transFigure.inverted().transform
 
     # Select the size of the image (relative to the X axis)
-    icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.0015
+    icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.005
     icon_center = icon_size / 2.0
 
     # Add the respective image to each node
