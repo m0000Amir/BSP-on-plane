@@ -5,7 +5,14 @@
         2.5,
         5
       ],
-      "intensity": 10e6
+      "intensity": 10e6,
+      "p_tr": 20,
+      "g": 4,
+      "p_recv": -79,
+      "l": 1,
+      "modulation": "MCS7",
+      "frequency": 5537,
+      "spatial_streams": 2
     }
   ],
   "device": [
@@ -14,6 +21,9 @@
         1,
         5
       ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
       "intensity": 11
     },
     {
@@ -21,6 +31,9 @@
         5.6,
         2.9
       ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
       "intensity": 12
     },
     {
@@ -28,6 +41,9 @@
         1.8,
         2.8
       ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
       "intensity": 13
     },
     {
@@ -35,6 +51,9 @@
         5,
         4
       ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
       "intensity": 14
     },
     {
@@ -42,6 +61,9 @@
         3.2,
         2.1
       ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
       "intensity": 15
     },
     {
@@ -49,6 +71,9 @@
         1.2,
         3.1
       ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
       "intensity": 16
     }
 
@@ -74,16 +99,27 @@
     ],
     "type": [
       {
-        "intensity": 45,
-        "coverage": 1.6,
-        "link_distance": 2,
-        "cost": 70
+        "intensity": 130,
+        "cost": 70,
+        "p_tr": 20,
+        "g": 4,
+        "p_recv": -79,
+        "l": 1,
+        "modulation": "MCS7",
+        "frequency": 5537,
+        "spatial_streams": 2
+
       },
       {
-        "intensity": 49,
-        "coverage": 2,
-        "link_distance": 1.5,
-        "cost": 75
+        "intensity": 104,
+        "cost": 70,
+        "p_tr": 20,
+        "g": 4,
+        "p_recv": -81,
+        "l": 1,
+        "modulation": "MCS5",
+        "frequency": 5537,
+        "spatial_streams": 2
       }
     ]
   }

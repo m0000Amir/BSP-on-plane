@@ -66,21 +66,21 @@ def create_graph(input_data: InputData) -> Network:
     for d2s in product(net.device.keys(), net.station.keys()):
         if net.exist_edge(net.device[d2s[0]]['coordinates'],
                           net.station[d2s[1]]['coordinates'],
-                          net.station[d2s[1]]['coverage']):
+                          net.station[d2s[1]]['coverage'][d2s[0]]):
             net.graph.add_edge(d2s[0], d2s[1])
 
     # Station To Station
     for s2s in permutations(net.station.keys(), 2):
         if net.exist_edge(net.station[s2s[0]]['coordinates'],
-                           net.station[s2s[1]]['coordinates'],
-                           net.station[s2s[1]]['link_distance']):
+                          net.station[s2s[1]]['coordinates'],
+                          net.station[s2s[0]]['link_distance'][s2s[1]]):
             net.graph.add_edge(s2s[0], s2s[1])
 
     # Station To Gateway
     for s2g in product(net.station.keys(), net.gateway.keys()):
         if net.exist_edge(net.station[s2g[0]]['coordinates'],
                           net.gateway[s2g[1]]['coordinates'],
-                          net.station[s2g[0]]['link_distance']):
+                          net.station[s2g[0]]['link_distance'][s2g[1]]):
             net.graph.add_edge(s2g[0], s2g[1])
 
     net.is_connected_graph()

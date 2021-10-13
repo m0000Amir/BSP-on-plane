@@ -118,14 +118,14 @@ def prepare_draw_graph(net: Network, problem: MIP, solution: pd.Series
     solution_variable = edge_z + edge_x + y_node
     labels = {}
     for k in range(len(solution)):
+        print(solution_variable[k][0])
+        print(solution.index[k])
         if solution_variable[k][0] == solution.index[k]:
             labels.update({solution_variable[k][1][1:]: solution[k]})
         else:
             if solution[k] != 0:
                 i, j = solution_variable[k]
                 draw_graph.add_edge(i, j)
-
-
 
     _sta = [i+1 for i in range(len(net.type))] * int(
         len(net.station)/len(net.type))
@@ -146,8 +146,8 @@ def prepare_draw_graph(net: Network, problem: MIP, solution: pd.Series
                      net.station[j]["coordinates"][0]) ** 2 +
                     (net.station[i]["coordinates"][1] -
                      net.station[j]["coordinates"][1]) ** 2)
-                if ((_distance <= net.station[i]["link_distance"])
-                        and (_distance <= net.station[j]["link_distance"])):
+                if ((_distance <= net.station[i]["link_distance"][j])
+                        and (_distance <= net.station[j]["link_distance"][i])):
                     draw_link_distance.add_edge(i, j)
                     draw_link_distance_pos.update(
                         {i: net.station[i]["coordinates"]})
@@ -157,7 +157,7 @@ def prepare_draw_graph(net: Network, problem: MIP, solution: pd.Series
                      net.gateway[j]["coordinates"][0]) ** 2 +
                     (net.station[i]["coordinates"][1] -
                      net.gateway[j]["coordinates"][1]) ** 2)
-                if _distance <= net.station[i]["link_distance"]:
+                if _distance <= net.station[i]["link_distance"][j]:
                     draw_link_distance.add_edge(i, j)
                     draw_link_distance_pos.update(
                         {i: net.station[i]["coordinates"]})
@@ -197,7 +197,8 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
         elif i in net.device.keys():
             node_label.update({int(i): f"d$_{{{i}}}$"})
         elif i in net.station.keys():
-            node_label.update({int(i): f"S$_{{{sta[str(i)]}}}$"})
+            pass
+            # node_label.update({int(i): f"S$_{{{sta[str(i)]}}}$"})
 
 
     icons = {
@@ -225,7 +226,7 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
                             horizontalalignment='left')
 
     nx.draw_networkx_edges(draw_link_distance, draw_link_distance_pos,
-                           edge_color='#484E49', width=12,
+                           edge_color='#3CFF8A', width=12,
                            alpha=.3,
                            arrows=False)
     nx.draw_networkx_edges(draw_graph, pos,
@@ -242,7 +243,7 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
     tr_axes = fig.transFigure.inverted().transform
 
     # Select the size of the image (relative to the X axis)
-    icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.015
+    icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.0015
     icon_center = icon_size / 2.0
 
     # Add the respective image to each node
@@ -258,25 +259,16 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
     # plt.legend(markerscale=0.3)
 
-    for i in range(len(sta)):
-        key = list(net.station.keys())[i]
-        if key in pos.keys():
-            coverage = plt.Circle(net.station[key]["coordinates"],
-                                  net.station[key]["coverage"],
-                                  linestyle='--',
-                                  fill=True,
-                                  alpha=0.4, color='#3CFF8A')
-            ax.add_patch(coverage)
-
     # for i in range(len(sta)):
     #     key = list(net.station.keys())[i]
     #     if key in pos.keys():
-    #         link_distance = plt.Circle(net.station[key]["coordinates"],
-    #                               net.station[key]["link_distance"],
+    #         coverage = plt.Circle(net.station[key]["coordinates"],
+    #                               net.station[key]["coverage"],
     #                               linestyle='--',
     #                               fill=True,
-    #                               alpha=0.1, color='r')
-    #         ax.add_patch(link_distance)
+    #                               alpha=0.4, color='#3CFF8A')
+    #         ax.add_patch(coverage)
+
     plt.savefig('bsp_solution.png')
     plt.show()
 

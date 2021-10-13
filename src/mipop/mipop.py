@@ -298,127 +298,127 @@ class InequalityConstraints(Constraints):
         debug = 1
 
 
-class MIPOP(Network):
-    """
-    MIXED INTEGER PROGRAMMING OPTIMIZATION PROBLEM
-    Here MIP model is prepared.
-    Model consists :
-        - input data;
-        - prepared matrix:
-            1 objective function;
-            2 equality constraints with right value vector;
-            3 inequality constraints with right value vector;
-    """
-    def __init__(self, input_data: InputData):
-        super().__init__(input_data)
-        self.of = None
-        self.eq_constraints = None
-        self.ineq_constraints = None
-        self._create_matrix()
-
-    @staticmethod
-    def _create_edge_var_name(name: str, edge_name: List[Tuple[Any, ...]],
-                              sep: str = '_'):
-        return [name + sep.join(map(str, edge_name[i]))
-                for i in range(len(edge_name))]
-
-    def _get_variable_name(self) -> Dict:
-        """
-        Get variable name of the problem
-        Returns
-        -------
-            Dict of variable names
-        """
-        # var_edge_name = (
-        #         list(product(self.device.keys(), self.station.keys())) +
-        #         list(permutations(self.station.keys(), 2)) +
-        #         list(product(self.station.keys(), self.gateway.keys())))
-        edge_z = list(product(self.device.keys(), self.station.keys()))
-        edge_x = (list(permutations(self.station.keys(), 2)) +
-                  list(product(self.station.keys(), self.gateway.keys())))
-        var_z = self._create_edge_var_name('z', edge_z)
-        var_x = self._create_edge_var_name('x', edge_x)
-
-        var_y = ['y' + str(i) for i in self.station.keys()]
-        return {'z': var_z, 'x': var_x, 'y': var_y}
-
-    def _get_column_name(self) -> Dict:
-        point_count = int(len(self.station) / len(self.type))
-        station_point = [list(self.station.keys())[0] + i
-                         for i in range(point_count)]
-
-        _sp = list(product(station_point,
-                           list(map(lambda x: x + 1, self.type.keys()))))
-
-        _coordinate_n_sta = [f'c{_[0]}_s{_[1]}' for _ in _sp]
-        col_edge_name = list(product(self.device.keys(), _coordinate_n_sta))
-        # TODO: delete permutate
-        # aa = list(permutate(_coordinate_n_sta, 2))
-        # aa = list(permutations(station_point, 2))
-        # var_edge_name = (
-        #         list(product(self.device.keys(), _coordinate_n_sta)) +
-        #         list(permutations(_coordinate_n_sta, 2)) +
-        #         list(product(_coordinate_n_sta, self.gateway.keys())))
-
-        # TODO: delete these lists
-        device2sta = self._create_edge_var_name(
-            name='d',
-            edge_name=list(product(self.device.keys(), _coordinate_n_sta)),
-            sep='->')
-        sta2sta = self._create_edge_var_name(
-            name='',
-            edge_name=list(permutations(_coordinate_n_sta, 2)),
-            sep='->')
-        sta2gtw = self._create_edge_var_name(
-            name='',
-            edge_name=list(product(_coordinate_n_sta, self.gateway.keys())),
-            sep='->')
-        # var_edge_name = (device2sta + sta2sta + sta2gtw)
-
-        # a = list(product(self.device.keys(), _coordinate_n_sta))
-        # b = list(permutations(_coordinate_n_sta, 2))
-        # c = list(product(_coordinate_n_sta, self.gateway.keys()))
-        #
-
-        # col_x = self._create_edge_var_name('d', col_edge_name, sep='->')
-        # col_x = self._create_edge_var_name('d', var_edge_name, sep='->')
-
-        # col_y = _coordinate_n_sta
-
-        return {'z': device2sta,
-                'x': (sta2sta + sta2gtw),
-                'y': _coordinate_n_sta}
-
-    def _create_names(self) -> Tuple[Dict[str], Dict[str]]:
-        """ Create variable and column name"""
-        variable_name = self._get_variable_name()
-        column_name = self._get_column_name()
-
-        # # TODO: delete this permutations
-        # b = list(permutations(self.station.keys(), 2))
-        #
-        # # TODO: rewrite for column name
-
-        return variable_name, column_name
-
-    def _create_matrix(self):
-        """ Main class method. It return MIP model matrices."""
-        nodes = {'gateway': self.gateway,
-                 'device': self.device,
-                 'station': self.station}
-        v_name, c_name = self._create_names()
-        var_name = VarName(**v_name)
-        col_name = VarName(**c_name)
-
-        self.of = OF(var_name, col_name, nodes)
-        self.eq_constraints = EqualityConstraints(var_name, col_name,
-                                                  nodes, self.adj_matrix)
-        self.ineq_constraints = InequalityConstraints(var_name,
-                                                      col_name,
-                                                      nodes,
-                                                      self.adj_matrix)
-
-        pass
+# class MIPOP(Network):
+#     """
+#     MIXED INTEGER PROGRAMMING OPTIMIZATION PROBLEM
+#     Here MIP model is prepared.
+#     Model consists :
+#         - input data;
+#         - prepared matrix:
+#             1 objective function;
+#             2 equality constraints with right value vector;
+#             3 inequality constraints with right value vector;
+#     """
+#     def __init__(self, input_data: InputData):
+#         super().__init__(input_data)
+#         self.of = None
+#         self.eq_constraints = None
+#         self.ineq_constraints = None
+#         self._create_matrix()
+#
+#     @staticmethod
+#     def _create_edge_var_name(name: str, edge_name: List[Tuple[Any, ...]],
+#                               sep: str = '_'):
+#         return [name + sep.join(map(str, edge_name[i]))
+#                 for i in range(len(edge_name))]
+#
+#     def _get_variable_name(self) -> Dict:
+#         """
+#         Get variable name of the problem
+#         Returns
+#         -------
+#             Dict of variable names
+#         """
+#         # var_edge_name = (
+#         #         list(product(self.device.keys(), self.station.keys())) +
+#         #         list(permutations(self.station.keys(), 2)) +
+#         #         list(product(self.station.keys(), self.gateway.keys())))
+#         edge_z = list(product(self.device.keys(), self.station.keys()))
+#         edge_x = (list(permutations(self.station.keys(), 2)) +
+#                   list(product(self.station.keys(), self.gateway.keys())))
+#         var_z = self._create_edge_var_name('z', edge_z)
+#         var_x = self._create_edge_var_name('x', edge_x)
+#
+#         var_y = ['y' + str(i) for i in self.station.keys()]
+#         return {'z': var_z, 'x': var_x, 'y': var_y}
+#
+#     def _get_column_name(self) -> Dict:
+#         point_count = int(len(self.station) / len(self.type))
+#         station_point = [list(self.station.keys())[0] + i
+#                          for i in range(point_count)]
+#
+#         _sp = list(product(station_point,
+#                            list(map(lambda x: x + 1, self.type.keys()))))
+#
+#         _coordinate_n_sta = [f'c{_[0]}_s{_[1]}' for _ in _sp]
+#         col_edge_name = list(product(self.device.keys(), _coordinate_n_sta))
+#         # TODO: delete permutate
+#         # aa = list(permutate(_coordinate_n_sta, 2))
+#         # aa = list(permutations(station_point, 2))
+#         # var_edge_name = (
+#         #         list(product(self.device.keys(), _coordinate_n_sta)) +
+#         #         list(permutations(_coordinate_n_sta, 2)) +
+#         #         list(product(_coordinate_n_sta, self.gateway.keys())))
+#
+#         # TODO: delete these lists
+#         device2sta = self._create_edge_var_name(
+#             name='d',
+#             edge_name=list(product(self.device.keys(), _coordinate_n_sta)),
+#             sep='->')
+#         sta2sta = self._create_edge_var_name(
+#             name='',
+#             edge_name=list(permutations(_coordinate_n_sta, 2)),
+#             sep='->')
+#         sta2gtw = self._create_edge_var_name(
+#             name='',
+#             edge_name=list(product(_coordinate_n_sta, self.gateway.keys())),
+#             sep='->')
+#         # var_edge_name = (device2sta + sta2sta + sta2gtw)
+#
+#         # a = list(product(self.device.keys(), _coordinate_n_sta))
+#         # b = list(permutations(_coordinate_n_sta, 2))
+#         # c = list(product(_coordinate_n_sta, self.gateway.keys()))
+#         #
+#
+#         # col_x = self._create_edge_var_name('d', col_edge_name, sep='->')
+#         # col_x = self._create_edge_var_name('d', var_edge_name, sep='->')
+#
+#         # col_y = _coordinate_n_sta
+#
+#         return {'z': device2sta,
+#                 'x': (sta2sta + sta2gtw),
+#                 'y': _coordinate_n_sta}
+#
+#     def _create_names(self) -> Tuple[Dict[str], Dict[str]]:
+#         """ Create variable and column name"""
+#         variable_name = self._get_variable_name()
+#         column_name = self._get_column_name()
+#
+#         # # TODO: delete this permutations
+#         # b = list(permutations(self.station.keys(), 2))
+#         #
+#         # # TODO: rewrite for column name
+#
+#         return variable_name, column_name
+#
+#     def _create_matrix(self):
+#         """ Main class method. It return MIP model matrices."""
+#         nodes = {'gateway': self.gateway,
+#                  'device': self.device,
+#                  'station': self.station}
+#         v_name, c_name = self._create_names()
+#         var_name = VarName(**v_name)
+#         col_name = VarName(**c_name)
+#
+#         self.of = OF(var_name, col_name, nodes)
+#         self.eq_constraints = EqualityConstraints(var_name, col_name,
+#                                                   nodes, self.adj_matrix)
+#         self.ineq_constraints = InequalityConstraints(var_name,
+#                                                       col_name,
+#                                                       nodes,
+#                                                       self.adj_matrix)
+#
+#         pass
 
 
 class MIP:
@@ -687,7 +687,7 @@ def create_mipop(input_data: InputData, net: Network) -> MIP:
 
     # MIP
     mipop = MIP()
-    v_name, c_name = create_names(input_data)
+    v_name, c_name = create_names(input_data, net.adj_matrix)
     var_name = VarName(**v_name)
     col_name = VarName(**c_name)
 
