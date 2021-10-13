@@ -198,8 +198,7 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
         elif i in net.device.keys():
             node_label.update({int(i): f"d$_{{{i}}}$"})
         elif i in net.station.keys():
-            pass
-            # node_label.update({int(i): f"S$_{{{sta[str(i)]}}}$"})
+            node_label.update({int(i): f"S$_{{{sta[str(i)]}}}$"})
 
 
     icons = {
@@ -229,10 +228,12 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
     nx.draw_networkx_edges(draw_link_distance, draw_link_distance_pos,
                            edge_color='#3CFF8A', width=12,
                            alpha=.3,
-                           arrows=False)
+                           arrowstyle="simple",
+                           arrows=True)
     nx.draw_networkx_edges(draw_graph, pos,
                            arrowsize=10,
-                           width=3,
+                           arrowstyle="fancy",
+                           width=1,
                            edge_color='#000000')
     # Transform from data coordinates (scaled between xlim and ylim)
     # to display coordinates
