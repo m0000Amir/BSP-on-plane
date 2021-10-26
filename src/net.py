@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import List, TYPE_CHECKING
 if TYPE_CHECKING:
-    from problem_solution import InputData
+    from mip_solution import InputData
 from itertools import product,  permutations
 import math
 

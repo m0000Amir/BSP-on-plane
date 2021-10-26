@@ -24,7 +24,7 @@ class InputData:
     type: dict
 
 
-def prepare_input_data(data: Dict) -> InputData:
+def prepare_mip_input_data(data: Dict) -> InputData:
     """
     Prepare nodes to network graph.
         Node types:
@@ -104,12 +104,12 @@ def prepare_input_data(data: Dict) -> InputData:
 
 
 if __name__ == "__main__":
-    with open("./problem_test_4.json") as f:
+    with open("./input/problem_test_4.json") as f:
         data_from_json = json.load(f)
 
     solver = "gurobi"
 
-    input_data = prepare_input_data(data_from_json)
+    input_data = prepare_mip_input_data(data_from_json)
     # Graph of the problem
     net = create_graph(input_data)
 
@@ -129,8 +129,6 @@ if __name__ == "__main__":
 
     solution = pd.Series(x, index=problem.of.data.columns.values).T
     placed_station = solution[problem.of.column.y].values
-    # placed_station.tolist()
-
 
     draw_mip_graph(net, problem, solution)
 

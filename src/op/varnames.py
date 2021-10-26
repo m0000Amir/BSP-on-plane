@@ -4,7 +4,7 @@ Creation of variable names and column names for MIP
 from __future__ import annotations
 from typing import List, Tuple, Dict, TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from problem_solution import InputData
+    from mip_solution import InputData
 from itertools import product,  permutations, repeat, chain
 import numpy as np
 

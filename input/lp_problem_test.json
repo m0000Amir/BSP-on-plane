@@ -65,36 +65,6 @@
       "g_tr": 1,
       "l_tr": 0,
       "intensity": 15
-    },
-    {
-      "coordinates": [
-        9,
-        7
-      ],
-      "p_tr": 10,
-      "g_tr": 1,
-      "l_tr": 0,
-      "intensity": 16
-    },
-    {
-      "coordinates": [
-        12,
-        10
-      ],
-      "p_tr": 10,
-      "g_tr": 1,
-      "l_tr": 0,
-      "intensity": 17
-    },
-    {
-      "coordinates": [
-        6,
-        2
-      ],
-      "p_tr": 10,
-      "g_tr": 1,
-      "l_tr": 0,
-      "intensity": 17
     }
 
   ],
@@ -105,21 +75,13 @@
         4
       ],
       [
-        4,
-        3.5
-      ],
-      [
-        16,
-        4
-      ],
-      [
         10,
         10
       ]
     ],
     "type": [
       {
-        "intensity": 1300,
+        "intensity": 130,
         "cost": 70,
         "p_tr": 20,
         "g": 4,
@@ -131,7 +93,7 @@
 
       },
       {
-        "intensity": 1400,
+        "intensity": 130,
         "cost": 70,
         "p_tr": 18,
         "g": 3,

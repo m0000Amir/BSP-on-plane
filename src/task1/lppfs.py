@@ -6,7 +6,7 @@ from itertools import permutations
 
 from problem.lppfs_input import gate, obj, sta, sta_set
 from src.network import BSS
-from src.drawing.draw import draw_input_data, draw_lp_graph
+from src.drawing.draw import draw_input_data
 from src.lp_problem import solve_lp_problem
 
 import pandas as pd
@@ -88,7 +88,11 @@ class LPPFS:
                                    adj_mat_r_name))
         self.eq_array.iloc[i, column] = 1
         self.eq_array.loc[i, 'w' + str(i)] = 1
+        # a  = 0
+        # for j in list(self.net.o_p.keys()):
+        #     a = a + self._l[j]
         self.eq_b[i] = sum(self._l[j] for j in list(self.net.o_p.keys()))
+        # a = 1
 
     def make_for_o(self, i):
         adj_mat_c, = np.where(self.adj_mat[i, :] == 1)
@@ -173,13 +177,13 @@ class LPPFS:
 
 
 def lppfs_solver():
-    draw_input_data(gate, obj, sta)
+    # draw_input_data(gate, obj, sta)
     net = BSS(gate, obj, sta, sta_set)
     net.create()
 
     problem = LPPFS(net)
     problem.create_matrix()
-    draw_lp_graph(net)
+    # draw_lp_graph(net)
 
     result = solve_lp_problem(problem.f.values,
                               problem.ineq_array.values,
@@ -190,6 +194,10 @@ def lppfs_solver():
                               problem.upper_bounds,)
 
     solution = pd.Series(result.x, index=problem.eq_array.columns.values)
-    draw_lp_graph(net)
+    # draw_lp_graph(net)
 
     return solution
+
+
+if __name__ == '__main__':
+    lppfs_solver()

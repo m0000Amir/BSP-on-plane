@@ -35,11 +35,14 @@ def draw_input_data(net: Network) -> None:
         pass
 
     station_pos = {}
-    key = len(device_pos) + 1
-    for i in range(0, len(list(net.station.keys())), len(net.type)):
-        station_pos.update({key: net.station[len(device_pos)+1+i]["coordinates"]})
-        key += 1
 
+    unique_coordinates = []
+    sta_key = list(net.station.keys())
+    for i in range(len(sta_key)):
+        if net.station[sta_key[i]]["coordinates"] not in unique_coordinates:
+            unique_coordinates.append(net.station[sta_key[i]]["coordinates"])
+    for i in range(len(unique_coordinates)):
+        station_pos.update({len(device_pos) + 1 + i: unique_coordinates[i]})
 
     plt.close()
     fig = plt.gcf()
