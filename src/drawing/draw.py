@@ -11,7 +11,7 @@ from typing import List, Dict, Union
 import math
 
 from src.net import Network
-from src.mipop.mipop import MIP
+from src.op.mipop import MIP
 
 
 def get_coordinates(position):

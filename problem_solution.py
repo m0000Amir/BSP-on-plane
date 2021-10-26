@@ -9,7 +9,7 @@ import pandas as pd
 
 import src.gurobi.milp_problem
 import src.matlab.milp_problem
-from src.mipop.mipop import create_mipop
+from src.op.mipop import create_mipop
 from src.drawing.draw import draw_mip_graph, draw_input_data
 from src.net import create_graph
 from src.link.sta_value import GetDistanceInput, get_distance
