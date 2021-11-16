@@ -56,8 +56,9 @@ class OF(Matrix):
         # Cost * y -> min
         y_col = np.where(np.in1d(self.data.columns.values,
                                  self.column.y))
-        self.data.iloc[0, y_col] = [input_data.station[i]['cost']
-                                    for i in input_data.station.keys()]
+
+        self.data.iloc[0, y_col] = [input_data.station[i[0]]['cost']
+                                    for i in self.var.edge_x]
 
         self.int_constraints = np.where(np.in1d(self.data.columns.values,
                                                 self.column.y))
@@ -90,7 +91,7 @@ class OF(Matrix):
         -------
             objective function
         """
-        data = np.zeros([1, len(self.column.name)]).astype(int)
+        data = np.zeros([1, len(self.var.name)]).astype(int)
         self.data = pd.DataFrame(data, columns=self.column.name)
 
         self.prepare_of_variables(input_data, var_name, col_name)
@@ -197,8 +198,21 @@ class EqualityConstraints(Constraints):
             _col, = np.where(net.adj_matrix[i, :] == 1)
             _var_name = [f"x{i}_{_col[j]}" for j in range(len(_col))]
             _column, = np.where(np.in1d(self.var.name, _var_name))
-            self.data.iloc[i, _column] = -1
-            self.b[i] = 0
+            self.data.iloc[data_row, _column] = -1
+            self.b[data_row] = 0
+
+    def outgoing_edge_conditions(self, input_data: InputData, net: Network):
+        """
+        From any station must go out only one link.
+        """
+        for i in input_data.station.keys():
+            data_row = self.counter()
+            _col, = np.where(net.adj_matrix[i, :] == 1)
+            _var_name = [f"y{i}_{_col[j]}" for j in range(len(_col))]
+            _column, = np.where(np.in1d(self.var.name, _var_name))
+            self.data.iloc[data_row, _column] = 1
+            self.b[data_row] = 1
+            a = 1
 
     def create(self,
                input_data: InputData,
@@ -217,9 +231,7 @@ class EqualityConstraints(Constraints):
         """
 
         # TODO: check number of row
-        row_number = (len(input_data.gateway) +
-                      len(input_data.device) +
-                      len(input_data.station))
+        row_number = 1000
 
         data = np.zeros([row_number, len(self.column.name)]).astype(int)
         self.b = np.zeros(row_number)
@@ -229,6 +241,8 @@ class EqualityConstraints(Constraints):
         self.gateway_conditions(input_data, net)
         self.device_conditions(input_data, net)
         self.station_conditions(input_data, net)
+        # self.outgoing_edge_conditions(input_data, net)
+
 
         # deleting empty last rows
         _row = self.counter()
@@ -273,22 +287,46 @@ class InequalityConstraints(Constraints):
                                     data_row: int,
                                     input_data: InputData):
         """ Traffic is limited by intensity of station service time"""
-        _column = np.where(np.in1d(self.var.name, f"y{i}"))
+        _y_var_name = [f"y{j[0]}_{j[1]}" for j in self.var.edge_x if j[0] == i]
+        _column = np.where(np.in1d(self.var.name, _y_var_name))
         self.data.iloc[data_row, _column] = (
                 -1 * input_data.station[i]["intensity"]
         )
 
+    # def outgoing_edge_conditions(self, input_data: InputData, net: Network):
+    #     """
+    #     From any station must go out only one link.
+    #     """
+    #     for i in input_data.station.keys():
+    #         data_row = self.counter()
+    #         _col, = np.where(net.adj_matrix[i, :] == 1)
+    #         _var_name = [f"y{i}_{_col[j]}" for j in range(len(_col))]
+    #         _column, = np.where(np.in1d(self.var.name, _var_name))
+    #         self.data.iloc[data_row, _column] = 1
+    #         self.b[data_row] = 1
+    #         a = 1
+
     def to_place_only_one_station_condition(self,
-                                            input_data: InputData):
+                                            input_data: InputData,
+                                            net: Network):
         """In each point coordinate must be only one placed station"""
-        for k in range(0, len(input_data.station), len(input_data.type)):
+        for i in input_data.station.keys():
             data_row = self.counter()
-            y_name = [
-                f"y{k + len(input_data.device) + 1 + j}"
-                for j in range(len(input_data.type))]
-            _col, = np.where(np.in1d(self.var.name, y_name))
-            self.data.iloc[data_row, _col] = 1
+            _col, = np.where(net.adj_matrix[i, :] == 1)
+            _var_name = [f"y{i}_{_col[j]}" for j in range(len(_col))]
+            _column, = np.where(np.in1d(self.var.name, _var_name))
+            self.data.iloc[data_row, _column] = 1
             self.b[data_row] = 1
+        a = 1
+        # for k in range(0, len(input_data.station), len(input_data.type)):
+        #     data_row = self.counter()
+        #     y_name = [
+        #         f"y{k + len(input_data.device) + 1 + j}"
+        #         for j in range(len(input_data.type))]
+        #     _col, = np.where(np.in1d(self.var.name, y_name))
+        #     self.data.iloc[data_row, _col] = 1
+        #     self.b[data_row] = 1
+
 
     def station_conditions(self, input_data, net) -> None:
         for i in input_data.station.keys():
@@ -297,23 +335,7 @@ class InequalityConstraints(Constraints):
 
             self.get_station_limit_condition(i, data_row, input_data)
 
-        # TODO: check this condition
-        # """ All traffic from sta is no more than intensity of station
-        # service time"""
-        # for i in input_data.station.keys():
-        #     data_row = self.counter()
-        #     _row, = np.where(net.adj_matrix[i, :] == 1)
-        #     for j in _row:
-        #         _var_name = [f"x{i}_{j}"]
-        #         _col = np.where(np.in1d(self.var.name, _var_name))
-        #         self.data.iloc[data_row, _col] = 1
-        #
-        #     _column = np.where(np.in1d(self.var.name, f"y{i}"))
-        #     self.data.iloc[data_row, _column] = (
-        #             -1 * input_data.station[i]["intensity"]
-        #     )
-
-        self.to_place_only_one_station_condition(input_data)
+        self.to_place_only_one_station_condition(input_data, net)
 
     def create(self, input_data, net) -> None:
         """

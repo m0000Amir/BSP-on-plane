@@ -3,7 +3,7 @@
     {
       "coordinates": [
         15,
-        12
+        22
       ],
       "intensity": 10e6,
       "p_tr": 20,
@@ -52,7 +52,7 @@
     "type": [
       {
         "intensity": 1300,
-        "cost": 70,
+        "cost": 60,
         "p_tr": 20,
         "g": 4,
         "p_recv": -79,

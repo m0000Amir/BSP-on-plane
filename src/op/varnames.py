@@ -55,7 +55,8 @@ def get_variable_name(input_data: InputData,
     var_z = create_edge_var_name('z', edge_z)
     var_x = create_edge_var_name('x', edge_x)
 
-    var_y = ['y' + str(i) for i in input_data.station.keys()]
+    # var_y = ['y' + str(i) for i in input_data.station.keys()]
+    var_y = create_edge_var_name('y', edge_x)
 
     return VarName(var_z, edge_z, var_x, edge_x, var_y)
 
@@ -101,12 +102,16 @@ def get_column_name(input_data: InputData, adj_matrix: np.array) -> VarName:
         edge_nodes=sta2sta_edge,
         sep='->')
 
-    _sp = list(product(
-        station_point,
-        list(map(lambda x: x + 1, input_data.type.keys()))))
+    # _sp = list(product(
+    #     station_point,
+    #     list(map(lambda x: x + 1, input_data.type.keys()))))
+    # _coordinate_n_sta = [f'c{_[0]}_s{_[1]}' for _ in _sp]  # y=_coordinate_n_sta
 
-    _coordinate_n_sta = [f'c{_[0]}_s{_[1]}' for _ in _sp]
-    return VarName(z=device2sta, x=(sta2sta + sta2gtw), y=_coordinate_n_sta)
+    _edge = sta2sta + sta2gtw
+    binary_value_y = [f'Y_{i}' for i in _edge]
+
+
+    return VarName(z=device2sta, x=(sta2sta + sta2gtw), y=binary_value_y)
 
 
 def create_names(input_data: InputData, adj_matrix: np.array) -> Tuple[VarName, VarName]:

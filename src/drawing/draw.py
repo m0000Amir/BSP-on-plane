@@ -122,10 +122,14 @@ def prepare_draw_graph(net: Network, problem: MIP, solution: pd.Series
 
     y_node = list(zip(problem.of.column.y, problem.of.var.y))
     solution_variable = edge_z + edge_x + y_node
+    _edge = edge_z + edge_x + edge_x
     labels = {}
     for k in range(len(solution)):
         if solution_variable[k][0] == solution.index[k]:
-            labels.update({solution_variable[k][1][1:]: solution[k]})
+            a = solution_variable[k][0]
+            b = solution.index[k]
+            labels.update({_edge[k][1]: solution[k]})
+            a = 1
         else:
             if solution[k] != 0:
                 i, j = solution_variable[k]
@@ -201,7 +205,7 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
         elif i in net.device.keys():
             node_label.update({int(i): f"d$_{{{i}}}$"})
         elif i in net.station.keys():
-            node_label.update({int(i): f"S$_{{{sta[str(i)]}}}$"})
+            node_label.update({int(i): f"S$_{{{sta[i]}}}$"})
 
 
     icons = {
