@@ -310,22 +310,25 @@ class InequalityConstraints(Constraints):
                                             input_data: InputData,
                                             net: Network):
         """In each point coordinate must be only one placed station"""
-        for i in input_data.station.keys():
+        # for i in input_data.station.keys():
+        #     data_row = self.counter()
+        #     _col, = np.where(net.adj_matrix[i, :] == 1)
+        #     _var_name = [f"y{i}_{_col[j]}" for j in range(len(_col))]
+        #     _column, = np.where(np.in1d(self.var.name, _var_name))
+        #     self.data.iloc[data_row, _column] = 1
+        #     self.b[data_row] = 1
+        a = 1
+        sta_keys = list(input_data.station.keys())
+        for k in range(0, len(sta_keys), len(input_data.type)):
             data_row = self.counter()
-            _col, = np.where(net.adj_matrix[i, :] == 1)
-            _var_name = [f"y{i}_{_col[j]}" for j in range(len(_col))]
-            _column, = np.where(np.in1d(self.var.name, _var_name))
-            self.data.iloc[data_row, _column] = 1
+            for j in range(len(input_data.type)):
+                sta = sta_keys[k] + j
+                _col, = np.where(net.adj_matrix[sta, :] == 1)
+                _var_name = [f"y{sta}_{_col[i]}" for i in range(len(_col))]
+                _column, = np.where(np.in1d(self.var.name, _var_name))
+                self.data.iloc[data_row, _column] = 1
             self.b[data_row] = 1
         a = 1
-        # for k in range(0, len(input_data.station), len(input_data.type)):
-        #     data_row = self.counter()
-        #     y_name = [
-        #         f"y{k + len(input_data.device) + 1 + j}"
-        #         for j in range(len(input_data.type))]
-        #     _col, = np.where(np.in1d(self.var.name, y_name))
-        #     self.data.iloc[data_row, _col] = 1
-        #     self.b[data_row] = 1
 
 
     def station_conditions(self, input_data, net) -> None:

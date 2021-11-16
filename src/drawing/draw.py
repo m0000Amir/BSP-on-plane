@@ -1,12 +1,11 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import PIL
 
-
 import itertools
-from itertools import product,  permutations
+from itertools import product, permutations
 from typing import List, Dict, Union
 import math
 
@@ -31,8 +30,6 @@ def draw_input_data(net: Network) -> None:
 
     gtw_pos = {0: net.gateway[0]["coordinates"]}
     device_pos = {i: net.device[i]["coordinates"] for i in net.device.keys()}
-    for i in net.station.keys():
-        pass
 
     station_pos = {}
 
@@ -49,28 +46,36 @@ def draw_input_data(net: Network) -> None:
     ax = fig.gca()
     ax.set_title(title)
     g_x, g_y = get_coordinates(gtw_pos)
-    plt.plot(g_x, g_y, color='#57FF9A', marker='X', markersize=30, linestyle='',
+    plt.plot(g_x, g_y, color='#57FF9A', marker='X', markersize=22, linestyle='',
              label='Координаты шлюза')
     [plt.annotate(i, xy=gtw_pos[i], xytext=gtw_pos[i], ha='center', va='center',
                   color='k') for i in gtw_pos]
 
-    o_x, o_y = get_coordinates(device_pos)
-    plt.plot(o_x, o_y, color='#57FF9A', marker='o', markersize=20, linestyle='',
-             label='Координаты объектов')
-    [plt.annotate(i, xy=device_pos[i], xytext=device_pos[i], ha='center',
-                  va='center', color='k', size=12) for i in device_pos]
+    tx_scale = (ax.get_xlim()[1] - ax.get_xlim()[0]) * .5
+    for key in device_pos.keys():
+        im = OffsetImage(
+            plt.imread("src/drawing/icons/device.png", format="png"), zoom=.4)
+        ab = AnnotationBbox(im, (device_pos[key][0], device_pos[key][1]),
+                            frameon=False)
+        ax.add_artist(ab)
+        tx, ty = device_pos[key]
+        plt.annotate(key, xy=device_pos[key],
+                     xytext=(tx - tx_scale, ty + tx_scale), ha='right',
+                     va='top', color='k', size=12)
 
     s_x, s_y = get_coordinates(station_pos)
-    plt.plot(s_x, s_y, color='#57FF9A', marker='X', markersize=30,
+    plt.plot(s_x, s_y, color='#57FF9A', marker='X', markersize=22,
              linestyle='', label='Координаты размещения станций')
     [plt.annotate(i, xy=station_pos[i], xytext=station_pos[i], ha='center',
                   va='center', color='k', size=15) for i in station_pos]
-    plt.legend(markerscale=0.3)
-    # plt.rc('font', size=20)
+
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+              fancybox=True, shadow=True, ncol=1)
     ax.axis('equal')
     plt.grid()
     plt.savefig('bsp_input_data.png')
     plt.show()
+    a = 1
 
 
 def prepare_graph_for_draw(net, placed_sta):
@@ -83,9 +88,8 @@ def prepare_graph_for_draw(net, placed_sta):
     draw_graph_node = net.graph.copy()
 
     sta_node = list(net.station.keys())
-    # cov_sta = net.coverage.values()
     cov_sta = [net.station[key]["coverage"] for key in net.station.keys()]
-    # s_p_num = int(len(net.s_p)/len(net.c))
+
     s_p_num = int(len(s_list) / len(net.type))
     s = s_list[:s_p_num] * len(net.type)
 
@@ -111,7 +115,6 @@ def prepare_draw_graph(net: Network, problem: MIP, solution: pd.Series
     draw_graph = nx.DiGraph()
     draw_link_distance = nx.DiGraph()
 
-
     _x_nodes = (list(permutations(net.station.keys(), 2)) +
                 list(product(net.station.keys(),
                              net.gateway.keys())))
@@ -126,17 +129,14 @@ def prepare_draw_graph(net: Network, problem: MIP, solution: pd.Series
     labels = {}
     for k in range(len(solution)):
         if solution_variable[k][0] == solution.index[k]:
-            a = solution_variable[k][0]
-            b = solution.index[k]
             labels.update({_edge[k][1]: solution[k]})
-            a = 1
         else:
             if solution[k] != 0:
                 i, j = solution_variable[k]
                 draw_graph.add_edge(i, j)
 
-    _sta = [i+1 for i in range(len(net.type))] * int(
-        len(net.station)/len(net.type))
+    _sta = [i + 1 for i in range(len(net.type))] * int(
+        len(net.station) / len(net.type))
     sta = dict(zip(labels.keys(), _sta))
 
     all_points = {**net.gateway, **net.device, **net.station}
@@ -197,7 +197,8 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
     # limits = plt.axis("on")   # turns on axis
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
 
-    draw_graph, draw_link_distance, pos, draw_link_distance_pos, sta = prepare_draw_graph(net, problem, solution)
+    draw_graph, draw_link_distance, pos, draw_link_distance_pos, sta = \
+        prepare_draw_graph(net, problem, solution)
     node_label = {}
     for i in pos.keys():
         if i in net.gateway.keys():
@@ -206,7 +207,6 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
             node_label.update({int(i): f"d$_{{{i}}}$"})
         elif i in net.station.keys():
             node_label.update({int(i): f"S$_{{{sta[i]}}}$"})
-
 
     icons = {
         "gateway": "src/drawing/icons/gateway.png",
@@ -226,7 +226,7 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
             G.add_node(i, image=images["bs"])
     nx.draw_networkx_nodes(G, pos, node_size=.001)
     label_pos_scale = (ax.get_xlim()[1] - ax.get_xlim()[0]) * .03
-    label_pos = {i: [pos[i][0]+label_pos_scale, pos[i][1]+label_pos_scale]
+    label_pos = {i: [pos[i][0] + label_pos_scale, pos[i][1] + label_pos_scale]
                  for i in pos.keys()}
     nx.draw_networkx_labels(draw_graph, label_pos, labels=node_label,
                             font_color='k',
@@ -246,9 +246,6 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
                            edge_color='#000000')
     # Transform from data coordinates (scaled between xlim and ylim)
     # to display coordinates
-    # ax.set_ylim(1, 7)
-    # ax.set_xlim(0, 6)
-    # ax.axis('scaled')
     tr_figure = ax.transData.transform
     # Transform from display to figure coordinates
     tr_axes = fig.transFigure.inverted().transform
@@ -268,21 +265,6 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
 
     ax.set_axis_on()
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
-    # plt.legend(markerscale=0.3)
-
-    # for i in range(len(sta)):
-    #     key = list(net.station.keys())[i]
-    #     if key in pos.keys():
-    #         coverage = plt.Circle(net.station[key]["coordinates"],
-    #                               net.station[key]["coverage"],
-    #                               linestyle='--',
-    #                               fill=True,
-    #                               alpha=0.4, color='#3CFF8A')
-    #         ax.add_patch(coverage)
 
     plt.savefig('bsp_solution.png')
     plt.show()
-
-
-
-
