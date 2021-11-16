@@ -8,6 +8,21 @@ if TYPE_CHECKING:
 from itertools import product,  permutations, repeat, chain
 import numpy as np
 
+class VarName:
+    """ Names of problem variable"""
+    def __init__(self,
+                 z: List[str] = None,
+                 edge_z: List[Tuple[int, int]] = None,
+                 x: List[str] = None,
+                 edge_x: List[Tuple[int, int]] = None,
+                 y: List[str] = None) -> None:
+        self.name = np.array(z + x + y)
+        self.z = z
+        self.edge_z = edge_z
+        self.x = x
+        self.edge_x = edge_x
+        self.y = y
+
 
 def create_edge_var_name(name: str,
                          edge_nodes: List[Any, ...],
@@ -17,7 +32,7 @@ def create_edge_var_name(name: str,
 
 
 def get_variable_name(input_data: InputData,
-                      adj_matrix: np.array) -> Dict:
+                      adj_matrix: np.array) -> VarName:
     """
     Get variable name of the problem
 
@@ -41,10 +56,11 @@ def get_variable_name(input_data: InputData,
     var_x = create_edge_var_name('x', edge_x)
 
     var_y = ['y' + str(i) for i in input_data.station.keys()]
-    return {'z': var_z, 'x': var_x, 'y': var_y}
+
+    return VarName(var_z, edge_z, var_x, edge_x, var_y)
 
 
-def get_column_name(input_data: InputData, adj_matrix: np.array) -> Dict:
+def get_column_name(input_data: InputData, adj_matrix: np.array) -> VarName:
     point_count = int(len(input_data.station) / len(input_data.type))
     station_point = [list(input_data.station.keys())[0] + i
                      for i in range(point_count)]
@@ -90,12 +106,10 @@ def get_column_name(input_data: InputData, adj_matrix: np.array) -> Dict:
         list(map(lambda x: x + 1, input_data.type.keys()))))
 
     _coordinate_n_sta = [f'c{_[0]}_s{_[1]}' for _ in _sp]
-    return {'z': device2sta,
-            'x': (sta2sta + sta2gtw),
-            'y': _coordinate_n_sta}
+    return VarName(z=device2sta, x=(sta2sta + sta2gtw), y=_coordinate_n_sta)
 
 
-def create_names(input_data: InputData, adj_matrix: np.array) -> Tuple[Dict[str], Dict[str]]:
+def create_names(input_data: InputData, adj_matrix: np.array) -> Tuple[VarName, VarName]:
     """
     Create variable and column name
     Parameters

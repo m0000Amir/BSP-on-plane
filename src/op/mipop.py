@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List, Tuple, Dict, TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from mip_solution import InputData
+    from .varnames import VarName
 from itertools import product,  permutations
 
 
@@ -11,18 +12,6 @@ from src.op.varnames import create_names
 
 import numpy as np
 import pandas as pd
-
-
-class VarName:
-    """ Names of problem variable"""
-    def __init__(self,
-                 z: List[str] = None,
-                 x: List[str] = None,
-                 y: List[str] = None) -> None:
-        self.name = np.array(z + x + y)
-        self.z = z
-        self.x = x
-        self.y = y
 
 
 class Matrix:
@@ -75,15 +64,13 @@ class OF(Matrix):
         # Bounds
         self.lower_bounds = np.zeros([1, len(self.column.name)]).astype(int)
 
-        __sta2sta = [input_data.station[i]["intensity"] for i in
-                     input_data.station.keys()
-                     for j in input_data.station.keys() if i != j]
-        __sta2gtw = [input_data.station[i]["intensity"] for i in
-                     input_data.station.keys()]
+        _sta2sta = [input_data.station[i[0]]["intensity"]
+                    for i in var_name.edge_x]
+
         # of.upper_bounds[0, of.int_constraints] = 1
         self.upper_bounds = np.concatenate((
             np.ones([len(self.var.z)]).astype(int),
-            np.array(__sta2sta + __sta2gtw).astype(int),
+            np.array(_sta2sta).astype(int),
             np.ones([len(self.var.y)]).astype(int))
         )
 
@@ -396,9 +383,7 @@ def create_mipop(input_data: InputData, net: Network) -> MIP:
 
     # MIP
     mipop = MIP()
-    v_name, c_name = create_names(input_data, net.adj_matrix)
-    var_name = VarName(**v_name)
-    col_name = VarName(**c_name)
+    var_name, col_name = create_names(input_data, net.adj_matrix)
 
     mipop.of = OF(input_data, var_name, col_name)
 
