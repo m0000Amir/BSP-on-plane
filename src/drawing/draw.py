@@ -221,7 +221,9 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
         elif i in net.station.keys():
             G.add_node(i, image=images["bs"])
     nx.draw_networkx_nodes(G, pos, node_size=.001)
-    label_pos = {i: [pos[i][0]+.1, pos[i][1]+.1] for i in pos.keys()}
+    label_pos_scale = (ax.get_xlim()[1] - ax.get_xlim()[0]) * .03
+    label_pos = {i: [pos[i][0]+label_pos_scale, pos[i][1]+label_pos_scale]
+                 for i in pos.keys()}
     nx.draw_networkx_labels(draw_graph, label_pos, labels=node_label,
                             font_color='k',
                             font_size=13,
@@ -248,7 +250,7 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
     tr_axes = fig.transFigure.inverted().transform
 
     # Select the size of the image (relative to the X axis)
-    icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.005
+    icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.003
     icon_center = icon_size / 2.0
 
     # Add the respective image to each node
