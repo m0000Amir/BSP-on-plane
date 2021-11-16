@@ -115,30 +115,15 @@ if __name__ == "__main__":
 
     problem = create_lpop(input_data, net)
     draw_input_data(net)
-    x = solve_lp_problem(obj_func=problem.of.data.values,
-                         ineq_array=problem.ineq_constraints.data.values,
-                         ineq_b=problem.ineq_constraints.b,
-                         eq_array=problem.eq_constraints.data.values,
-                         eq_b=problem.eq_constraints.b,
-                         lb=problem.of.lower_bounds,
-                         ub=problem.of.upper_bounds)
-    # if solver == 'gurobi':
-    #     x = src.gurobi.milp_problem.solve(problem)
-    # else:
-    #     x = src.matlab.milp_problem.solve(problem.of.data.values,
-    #                                       problem.of.int_constraints,
-    #                                       problem.ineq_constraints.data.values,
-    #                                       problem.ineq_constraints.b,
-    #                                       problem.eq_constraints.data.values,
-    #                                       problem.eq_constraints.b,
-    #                                       problem.of.lower_bounds,
-    #                                       problem.of.upper_bounds)
-    #
-    # solution = pd.Series(x, index=problem.of.data.columns.values).T
-    # placed_station = solution[problem.of.column.y].values
-    # # placed_station.tolist()
-    #
-    #
-    # draw_mip_graph(net, problem, solution)
+    result = solve_lp_problem(obj_func=problem.of.data.values,
+                              ineq_array=problem.ineq_constraints.data.values,
+                              ineq_b=problem.ineq_constraints.b,
+                              eq_array=problem.eq_constraints.data.values,
+                              eq_b=problem.eq_constraints.b,
+                              lb=problem.of.lower_bounds,
+                              ub=problem.of.upper_bounds)
+
+    solution = pd.Series(result.x, index=problem.of.data.columns.values).T
+    draw_mip_graph(net, problem, solution)
 
     debug = 1

@@ -109,8 +109,6 @@ class OF(Matrix):
         self.prepare_of_variables(input_data, var_name, col_name)
 
 
-
-
 class Constraints(Matrix):
     """ Matrix of constraints"""
     def __init__(self, var: VarName, column: VarName):
