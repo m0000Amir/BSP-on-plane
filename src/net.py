@@ -81,9 +81,11 @@ def create_graph(input_data: InputData) -> Network:
 
     # Station To Gateway
     for s2g in product(net.station.keys(), net.gateway.keys()):
+        param_min = min(net.station[s2g[0]]['link_distance'][s2g[1]],
+                        net.gateway[s2g[1]]['link_distance'][s2g[0]])
         if net.exist_edge(net.station[s2g[0]]['coordinates'],
                           net.gateway[s2g[1]]['coordinates'],
-                          net.station[s2g[0]]['link_distance'][s2g[1]]):
+                          param_min):
             net.graph.add_edge(s2g[0], s2g[1])
 
     net.is_connected_graph()
