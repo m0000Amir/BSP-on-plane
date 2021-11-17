@@ -42,19 +42,29 @@ def draw_input_data(net: Network) -> None:
         station_pos.update({len(device_pos) + 1 + i: unique_coordinates[i]})
 
     plt.close()
-    fig = plt.gcf()
-    ax = fig.gca()
+    fig, ax = plt.subplots()
+    plt.grid()
+    # fig = plt.gcf()
+    # ax = fig.gca()
     ax.set_title(title)
     g_x, g_y = get_coordinates(gtw_pos)
-    plt.plot(g_x, g_y, color='#57FF9A', marker='X', markersize=22, linestyle='',
+    plt.plot(g_x, g_y, color='w', marker='X', markersize=22, linestyle='',
              label='Координаты шлюза')
+    im = OffsetImage(
+        plt.imread("src/drawing/icons/gateway.png", format="png"), zoom=.1)
+    ab = AnnotationBbox(im, (g_x[0], g_y[0]),
+                        frameon=False)
+    ax.add_artist(ab)
+
+
     [plt.annotate(i, xy=gtw_pos[i], xytext=gtw_pos[i], ha='center', va='center',
                   color='k') for i in gtw_pos]
-
+    # plt.show()
+    plt.grid()
     tx_scale = (ax.get_xlim()[1] - ax.get_xlim()[0]) * .5
     for key in device_pos.keys():
         im = OffsetImage(
-            plt.imread("src/drawing/icons/device.png", format="png"), zoom=.4)
+            plt.imread("src/drawing/icons/device.png", format="png"), zoom=.3)
         ab = AnnotationBbox(im, (device_pos[key][0], device_pos[key][1]),
                             frameon=False)
         ax.add_artist(ab)
@@ -62,6 +72,7 @@ def draw_input_data(net: Network) -> None:
         plt.annotate(key, xy=device_pos[key],
                      xytext=(tx - tx_scale, ty + tx_scale), ha='right',
                      va='top', color='k', size=12)
+        # plt.show()
 
     s_x, s_y = get_coordinates(station_pos)
     plt.plot(s_x, s_y, color='#57FF9A', marker='X', markersize=22,
@@ -69,8 +80,9 @@ def draw_input_data(net: Network) -> None:
     [plt.annotate(i, xy=station_pos[i], xytext=station_pos[i], ha='center',
                   va='center', color='k', size=15) for i in station_pos]
 
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-              fancybox=True, shadow=True, ncol=1)
+    # ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+    #           fancybox=True, shadow=True, ncol=1)
+    # plt.legend(loc='upper right', bbox_to_anchor=(0.9, 1))
     ax.axis('equal')
     plt.grid()
     plt.savefig('bsp_input_data.png')

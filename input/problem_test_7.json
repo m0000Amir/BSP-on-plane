@@ -1,0 +1,186 @@
+{
+  "gateway": [
+    {
+      "coordinates": [
+        8,
+        32
+      ],
+      "intensity": 10e6,
+      "p_tr": 20,
+      "g": 4,
+      "p_recv": -79,
+      "l": 1,
+      "modulation": "MCS7",
+      "frequency": 5537,
+      "spatial_streams": 2
+    }
+  ],
+  "device": [
+    {
+      "coordinates": [
+        2,
+        6
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 11
+    },
+    {
+      "coordinates": [
+        22,
+        15
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 11
+    },
+    {
+      "coordinates": [
+        2,
+        20
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 11
+    },
+    {
+      "coordinates": [
+        19,
+        20
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 11
+    },
+    {
+      "coordinates": [
+        14,
+        6
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 12
+    },
+    {
+      "coordinates": [
+        18,
+        18
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 13
+    },
+    {
+      "coordinates": [
+        11,
+        4
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 14
+    },
+    {
+      "coordinates": [
+        3.2,
+        2.1
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 15
+    },
+    {
+      "coordinates": [
+        9,
+        7
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 16
+    },
+    {
+      "coordinates": [
+        12,
+        10
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 17
+    },
+    {
+      "coordinates": [
+        6,
+        2
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 18
+    },
+    {
+      "coordinates": [
+        0,
+        25
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 19
+    }
+
+  ],
+  "station": {
+    "coordinates": [
+      [
+        18,
+        14
+      ],
+      [
+        4,
+        3.5
+      ],
+      [
+        5,
+        20
+      ],
+      [
+        10,
+        12
+      ]
+    ],
+    "type": [
+      {
+        "intensity": 1300,
+        "cost": 70,
+        "p_tr": 20,
+        "g": 4,
+        "p_recv": -79,
+        "l": 1,
+        "modulation": "MCS7",
+        "frequency": 5537,
+        "spatial_streams": 2
+
+      },
+      {
+        "intensity": 1400,
+        "cost": 70,
+        "p_tr": 18,
+        "g": 3,
+        "p_recv": -81,
+        "l": 1,
+        "modulation": "MCS5",
+        "frequency": 5537,
+        "spatial_streams": 2
+      }
+    ]
+  }
+}

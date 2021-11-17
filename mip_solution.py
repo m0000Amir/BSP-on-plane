@@ -104,7 +104,7 @@ def prepare_mip_input_data(data: Dict) -> InputData:
 
 
 if __name__ == "__main__":
-    with open("./input/problem_test_6.json") as f:
+    with open("./input/problem_test_7.json") as f:
         data_from_json = json.load(f)
 
     solver = "gurobi"
@@ -128,6 +128,9 @@ if __name__ == "__main__":
                                           problem.of.upper_bounds)
 
     solution = pd.Series(x, index=problem.of.data.columns.values).T
+
+    debug_solution = solution.copy()
+    debug_solution.index = problem.of.var.name
     placed_station = solution[problem.of.column.y].values
 
     draw_mip_graph(net, problem, solution)
