@@ -159,6 +159,8 @@ def prepare_draw_graph(net: Network, problem: MIP, solution: pd.Series
 
     draw_link_distance_pos = {}
     for i, j in edge_x:
+        if (i == 22) and (j == 19):
+            a = 1
         if (i in net.station.keys()) and (i in pos.keys()):
             if (j in net.station.keys()) and (j in pos.keys()):
                 _distance = math.sqrt(

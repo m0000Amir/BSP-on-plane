@@ -104,7 +104,7 @@ def prepare_mip_input_data(data: Dict) -> InputData:
 
 
 if __name__ == "__main__":
-    with open("./input/problem_test_7.json") as f:
+    with open("./input/problem_test_8.json") as f:
         data_from_json = json.load(f)
 
     solver = "gurobi"

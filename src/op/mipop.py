@@ -318,17 +318,26 @@ class InequalityConstraints(Constraints):
         #     self.data.iloc[data_row, _column] = 1
         #     self.b[data_row] = 1
         a = 1
-        sta_keys = list(input_data.station.keys())
-        for k in range(0, len(sta_keys), len(input_data.type)):
-            data_row = self.counter()
-            for j in range(len(input_data.type)):
-                sta = sta_keys[k] + j
-                _col, = np.where(net.adj_matrix[sta, :] == 1)
-                _var_name = [f"y{sta}_{_col[i]}" for i in range(len(_col))]
-                _column, = np.where(np.in1d(self.var.name, _var_name))
-                self.data.iloc[data_row, _column] = 1
-            self.b[data_row] = 1
+        # sta_keys = list(input_data.station.keys())
+        # for k in range(0, len(sta_keys), len(input_data.type)):
+        #     data_row = self.counter()
+        #     for j in range(len(input_data.type)):
+        #         sta = sta_keys[k] + j
+        #         _col, = np.where(net.adj_matrix[sta, :] == 1)
+        #         _var_name = [f"y{sta}_{_col[i]}" for i in range(len(_col))]
+        #         _column, = np.where(np.in1d(self.var.name, _var_name))
+        #         self.data.iloc[data_row, _column] = 1
+        #     self.b[data_row] = 1
         a = 1
+        for i, j in self.var.edge_x:
+            data_row = self.counter()
+            _x_name = f"x{i}_{j}"
+            _col_x, =  np.where(np.in1d(self.var.name, _x_name))
+            self.data.iloc[data_row, _col_x] = 1
+            _y_name = f"y{i}_{j}"
+            _col_y, = np.where(np.in1d(self.var.name, _y_name))
+            self.data.iloc[data_row, _col_y] = -1 * input_data.station[i]["intensity"]
+            self.b[data_row] = 0
 
 
     def station_conditions(self, input_data, net) -> None:

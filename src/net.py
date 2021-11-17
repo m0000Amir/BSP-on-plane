@@ -61,7 +61,6 @@ def create_graph(input_data: InputData) -> Network:
         - Station 2 Station; 
         - Station 2 Gateway.
     """
-
     # Device To Station
     for d2s in product(net.device.keys(), net.station.keys()):
         if net.exist_edge(net.device[d2s[0]]['coordinates'],
@@ -71,9 +70,13 @@ def create_graph(input_data: InputData) -> Network:
 
     # Station To Station
     for s2s in permutations(net.station.keys(), 2):
+        # if (s2s[0] == 22) and (s2s[1] == 19):
+        #     a = 1
+        param_min = min(net.station[s2s[0]]['link_distance'][s2s[1]],
+                        net.station[s2s[1]]['link_distance'][s2s[0]])
         if net.exist_edge(net.station[s2s[0]]['coordinates'],
                           net.station[s2s[1]]['coordinates'],
-                          net.station[s2s[0]]['link_distance'][s2s[1]]):
+                          param_min):
             net.graph.add_edge(s2s[0], s2s[1])
 
     # Station To Gateway
