@@ -339,7 +339,6 @@ class InequalityConstraints(Constraints):
             self.data.iloc[data_row, _col_y] = -1 * input_data.station[i]["intensity"]
             self.b[data_row] = 0
 
-
     def station_conditions(self, input_data, net) -> None:
         for i in input_data.station.keys():
             data_row = self.counter()

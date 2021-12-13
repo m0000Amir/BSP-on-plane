@@ -70,8 +70,6 @@ def create_graph(input_data: InputData) -> Network:
 
     # Station To Station
     for s2s in permutations(net.station.keys(), 2):
-        # if (s2s[0] == 22) and (s2s[1] == 19):
-        #     a = 1
         param_min = min(net.station[s2s[0]]['link_distance'][s2s[1]],
                         net.station[s2s[1]]['link_distance'][s2s[0]])
         if net.exist_edge(net.station[s2s[0]]['coordinates'],

@@ -7,7 +7,8 @@ from itertools import product,  permutations
 
 
 from src.net import Network
-from src.op.mipop import MIP, VarName, OF
+from src.op.mipop import MIP,  OF
+from src.op.varnames import VarName
 from src.op.mipop import EqualityConstraints, InequalityConstraints
 from src.op.varnames import create_names
 
@@ -121,10 +122,10 @@ class LpInequalityConstraints(InequalityConstraints):
         throughput is note needed"""
         self.b[data_row] = input_data.station[i]["intensity"]
 
-    def to_place_only_one_station_condition(self,
-                                            input_data: InputData):
-        """ This method (from class InequalityConstraints) is not needed """
-        pass
+    # def to_place_only_one_station_condition(self,
+    #                                         input_data: InputData):
+    #     """ This method (from class InequalityConstraints) is not needed """
+    #     pass
 
 
 def create_lpop(input_data: InputData, net: Network) -> LP:
@@ -151,17 +152,26 @@ def create_lpop(input_data: InputData, net: Network) -> LP:
     lpop = LP()
     _v_name, _c_name = create_names(input_data, net.adj_matrix)
 
-    y = [f'y{i + 1}' for i in range(
-        len(input_data.gateway) +
-        len(input_data.device) +
-        len(input_data.station)
-    )]
-    var_name = VarName(z=_v_name['z'], x=_v_name['x'], y=y)
-    col_name = VarName(z=_c_name['z'], x=_c_name['x'], y=y)
+    var_name, col_name = create_names(input_data, net.adj_matrix)
+
     lpop.of = LpOF(input_data, var_name, col_name)
 
     lpop.eq_constraints = LpEqualityConstraints(input_data, var_name,
                                                 col_name, net)
     lpop.ineq_constraints = LpInequalityConstraints(input_data, var_name,
                                                     col_name, net)
+
+    # y = [f'y{i + 1}' for i in range(
+    #     len(input_data.gateway) +
+    #     len(input_data.device) +
+    #     len(input_data.station)
+    # )]
+    # var_name = VarName(z=_v_name['z'], x=_v_name['x'], y=y)
+    # col_name = VarName(z=_c_name['z'], x=_c_name['x'], y=y)
+    # lpop.of = LpOF(input_data, var_name, col_name)
+    #
+    # lpop.eq_constraints = LpEqualityConstraints(input_data, var_name,
+    #                                             col_name, net)
+    # lpop.ineq_constraints = LpInequalityConstraints(input_data, var_name,
+    #                                                 col_name, net)
     return lpop

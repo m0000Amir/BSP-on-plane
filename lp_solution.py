@@ -45,6 +45,8 @@ def prepare_lp_input_data(data: Dict) -> InputData:
 
     gateway = {k: value for k, value in enumerate(data['gateway'])}
 
+
+
     station_coordinates = [{'coordinates': value} for value in
                            data['station']['coordinates']]
     station_types = [value for value in
@@ -55,8 +57,20 @@ def prepare_lp_input_data(data: Dict) -> InputData:
             **station_coordinates[i], ** station_types[i]}})
 
     device = {k + 1: value for k, value in enumerate(data['device'])}
-
+    gateway[0]["link_distance"] = {}
     for s1 in station.keys():
+        gtw2ld_input = GetDistanceInput(
+            p_tr=data["gateway"][0]["p_tr"],
+            l_tr=data["gateway"][0]["l"],
+            g_tr=data["gateway"][0]["g"],
+            p_recv=station[s1]["p_recv"],
+            g_recv=station[s1]["g"],
+            l_recv=station[s1]["l"],
+            frequency=station[s1]["frequency"]
+        )
+        gateway[0]["link_distance"].update(
+            {s1: get_distance(gtw2ld_input, som=30)})
+
         station[s1]["link_distance"] = {}
         station[s1]["coverage"] = {}
         ld2gtw_input = GetDistanceInput(
