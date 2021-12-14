@@ -120,7 +120,7 @@ def prepare_lp_input_data(data: Dict) -> InputData:
 
 
 if __name__ == "__main__":
-    with open("./input/lp_problem_test.json") as f:
+    with open("input/lp_problem_test_3.json") as f:
         data_from_json = json.load(f)
 
     input_data = prepare_lp_input_data(data_from_json)
@@ -139,5 +139,5 @@ if __name__ == "__main__":
 
     solution = pd.Series(result.x, index=problem.of.data.columns.values).T
     draw_mip_graph(net, problem, solution)
-
+    solution_debug = pd.Series(result.x, index=problem.of.var.name).T
     debug = 1

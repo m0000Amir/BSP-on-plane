@@ -201,6 +201,8 @@ class EqualityConstraints(Constraints):
             self.data.iloc[data_row, _column] = -1
             self.b[data_row] = 0
 
+
+
     def outgoing_edge_conditions(self, input_data: InputData, net: Network):
         """
         From any station must go out only one link.

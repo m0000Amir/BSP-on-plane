@@ -122,10 +122,11 @@ class LpInequalityConstraints(InequalityConstraints):
         throughput is note needed"""
         self.b[data_row] = input_data.station[i]["intensity"]
 
-    # def to_place_only_one_station_condition(self,
-    #                                         input_data: InputData):
-    #     """ This method (from class InequalityConstraints) is not needed """
-    #     pass
+    def to_place_only_one_station_condition(self,
+                                            input_data: InputData,
+                                            net: Network):
+        """ This method (from class InequalityConstraints) is not needed """
+        pass
 
 
 def create_lpop(input_data: InputData, net: Network) -> LP:
