@@ -29,13 +29,14 @@ class OF(Matrix):
     """ Object function vector [1 x n]"""
     def __init__(self,
                  input_data: InputData,
+                 adj_matrix: np.array,
                  var_name: VarName,
                  col_name: VarName):
         super().__init__(var_name, col_name)
         self.lower_bounds = None
         self.upper_bounds = None
         self.int_constraints = None
-        self.create(input_data, var_name, col_name)
+        self.create(input_data, adj_matrix, var_name, col_name)
 
     def get_index(self, var_name: List[str]) -> np.ndarray:
         """
@@ -52,7 +53,7 @@ class OF(Matrix):
         """
         return np.where(np.in1d(self.data.columns.values, var_name))
 
-    def prepare_of_variables(self, input_data, var_name, col_name):
+    def prepare_of_variables(self, input_data, adj_matrix, var_name, col_name):
         # Cost * y -> min
         y_col = np.where(np.in1d(self.data.columns.values,
                                  self.column.y))
@@ -75,7 +76,7 @@ class OF(Matrix):
             np.ones([len(self.var.y)]).astype(int))
         )
 
-    def create(self, input_data, var_name, col_name):
+    def create(self, input_data, adj_matrix, var_name, col_name):
         """
         Create objective function of MIP
 
@@ -94,7 +95,7 @@ class OF(Matrix):
         data = np.zeros([1, len(self.var.name)]).astype(int)
         self.data = pd.DataFrame(data, columns=self.column.name)
 
-        self.prepare_of_variables(input_data, var_name, col_name)
+        self.prepare_of_variables(input_data, adj_matrix, var_name, col_name)
 
 
 class Constraints(Matrix):
@@ -420,7 +421,7 @@ def create_mipop(input_data: InputData, net: Network) -> MIP:
     mipop = MIP()
     var_name, col_name = create_names(input_data, net.adj_matrix)
 
-    mipop.of = OF(input_data, var_name, col_name)
+    mipop.of = OF(input_data, net.adj_matrix, var_name, col_name)
 
     mipop.eq_constraints = EqualityConstraints(input_data, var_name,
                                                col_name, net)

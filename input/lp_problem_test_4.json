@@ -2,14 +2,14 @@
   "gateway": [
     {
       "coordinates": [
-        8,
+        10,
         15
       ],
       "intensity": 10e6,
-      "p_tr": 20,
-      "g": 4,
+      "p_tr": 15,
+      "g": 3,
       "p_recv": -79,
-      "l": 1,
+      "l": 0,
       "modulation": "MCS7",
       "frequency": 5537,
       "spatial_streams": 2
@@ -18,8 +18,8 @@
   "device": [
     {
       "coordinates": [
-        -2,
-        0
+        0,
+        1
       ],
       "p_tr": 10,
       "g_tr": 1,
@@ -71,12 +71,8 @@
   "station": {
     "coordinates": [
       [
-        2,
-        4
-      ],
-      [
-        10,
-        10
+        1,
+        1
       ],
       [
         6,
@@ -95,17 +91,6 @@
         "frequency": 5537,
         "spatial_streams": 2
 
-      },
-      {
-        "intensity": 130,
-        "cost": 70,
-        "p_tr": 18,
-        "g": 3,
-        "p_recv": -81,
-        "l": 1,
-        "modulation": "MCS5",
-        "frequency": 5537,
-        "spatial_streams": 2
       },
       {
         "intensity": 130,

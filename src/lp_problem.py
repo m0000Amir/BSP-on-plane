@@ -22,8 +22,8 @@ def solve_lp_problem(obj_func, ineq_array, ineq_b, eq_array, eq_b, lb, ub):
                   A_eq=eq_array, b_eq=eq_b, bounds=minmax_bounds,
                   method='simplex', callback=None,
                   options={'disp': True})
-    assert round(res.fun) == 0, \
-        ('There is no solution because the '
-         'objective function value of linear '
-         'programing problem is not zero')
+    # assert round(res.fun) == 0, \
+    #     ('There is no solution because the '
+    #      'objective function value of linear '
+    #      'programing problem is not zero')
     return res

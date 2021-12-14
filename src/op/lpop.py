@@ -20,16 +20,61 @@ class LP(MIP):
     def __init__(self):
         super(LP, self).__init__()
 
+    def add_synthetic_variables(self):
+        if ((self.eq_constraints is not None) and
+                (self.ineq_constraints is not None)):
+            eq_constraints_count = len(self.eq_constraints.data)
+            ineq_constraints_count = len(self.ineq_constraints.data)
+            self.add_synthetic_name(eq_constraints_count,
+                                    ineq_constraints_count)
+            all_synthetic_variables = np.eye(eq_constraints_count +
+                                             ineq_constraints_count).astype(int)
+            eq_synthetic_variables = \
+                all_synthetic_variables[:eq_constraints_count, :]
+            eq_data = np.hstack(
+                (self.eq_constraints.data.values, eq_synthetic_variables))
+            self.eq_constraints.data = pd.DataFrame(
+                eq_data, columns=self.eq_constraints.column.name)
+
+            ineq_synthetic_variables = \
+                all_synthetic_variables[eq_constraints_count:, :]
+            ineq_data = np.hstack(
+                (self.ineq_constraints.data.values, ineq_synthetic_variables))
+            self.ineq_constraints.data = pd.DataFrame(
+                ineq_data, columns=self.ineq_constraints.column.name)
+
+    def add_synthetic_name(self,
+                           eq_constraints_count: int,
+                           ineq_constraints_count: int
+                           ):
+        """ Need to add synthetic variables for OF """
+        synthetic_name = [f"y{i + 1}" for i in range(eq_constraints_count +
+                                                     ineq_constraints_count)]
+        self.eq_constraints.var.y = synthetic_name
+        self.eq_constraints.var.y = synthetic_name
+        self.eq_constraints.var.name = np.append(
+            self.eq_constraints.var.name,
+            np.array(synthetic_name)
+        )
+
+        self.ineq_constraints.column.y = synthetic_name
+        self.ineq_constraints.column.y = synthetic_name
+        self.ineq_constraints.column.name = np.append(
+            self.ineq_constraints.column.name,
+            np.array(synthetic_name)
+        )
+
 
 class LpOF(OF):
     def __init__(self,
                  input_data: InputData,
+                 adj_matrix: np.array,
                  var_name: VarName,
                  col_name: VarName):
-        super(LpOF, self).__init__(input_data, var_name, col_name)
+        super(LpOF, self).__init__(input_data, adj_matrix, var_name, col_name)
 
     # TODO : make variable w_i
-    def prepare_of_variables(self, input_data, var_name, col_name):
+    def prepare_of_variables(self, input_data, adj_matrix, var_name, col_name):
         # Cost * y -> min
         y_col = np.where(np.in1d(self.data.columns.values,
                                  self.column.y))
@@ -37,15 +82,24 @@ class LpOF(OF):
 
         # Bounds
         self.lower_bounds = np.zeros([1, len(self.column.name)]).astype(int)
-        __sta2sta = [input_data.station[i]["intensity"] for i in
-                     input_data.station.keys()
-                     for j in input_data.station.keys() if i != j]
-        __sta2gtw = [input_data.station[i]["intensity"] for i in
-                     input_data.station.keys()]
+        # __sta2sta = [input_data.station[i]["intensity"] for i in
+        #              input_data.station.keys()
+        #              for j in input_data.station.keys() if i != j]
+        # __sta2gtw = [input_data.station[i]["intensity"] for i in
+        #              input_data.station.keys()]
+
+        throughput = []
+        # TODO: change as throughput in MIPOP
+        for i in input_data.station.keys():
+            if adj_matrix[i, 0] == 1:
+                throughput.append(input_data.station[i]["intensity"])
+            for j in input_data.station.keys():
+                if (i != j) and (adj_matrix[i, j] == 1):
+                    throughput.append(input_data.station[i]["intensity"])
 
         self.upper_bounds = np.concatenate((
             np.ones([len(self.var.z)]).astype(int)*np.inf,
-            np.array(__sta2sta + __sta2gtw).astype(int),
+            np.array(throughput).astype(int),
             np.ones([len(self.var.y)]).astype(int)*np.inf)
         )
 
@@ -83,6 +137,41 @@ class LpEqualityConstraints(EqualityConstraints):
             _var_name = [f'{var}{int(j)}_{i}']
             _col = np.where(np.in1d(self.var.name, _var_name))
             self.data.iloc[data_row, _col] = 1
+
+    def station_conditions(self, input_data: InputData, net: Network):
+        """
+            Prepare equality constraints for stations. Traffic must be move
+            through a station.
+        """
+
+        for i in input_data.station.keys():
+            data_row = self.counter()
+            self.get_links_from_device_to_sta(i, data_row, input_data, net)
+
+            """ 
+            Outgoing links for station 'S_j' 
+            All station has outgoing links from devices and other stations.
+            Using adjacency matrix, we add all output edges
+            """
+            _col, = np.where(net.adj_matrix[i, :] == 1)
+            _var_name = [f"x{i}_{_col[j]}" for j in range(len(_col))]
+            _column, = np.where(np.in1d(self.var.name, _var_name))
+            self.data.iloc[data_row, _column] = -1
+            self.b[data_row] = 0
+        # TODO: check it
+        # for i in input_data.station.keys():
+        #     for j in input_data.station.keys():
+        #         if i != j:
+        #             data_row = self.counter()
+        #             input_var_name = f"x{i}_{j}"
+        #             output_var_name = f"x{j}_{i}"
+        #             input_column, = np.where(np.in1d(self.var.name,
+        #                                              [input_var_name]))
+        #             output_column, = np.where(np.in1d(self.var.name,
+        #                                               [output_var_name]))
+        #             self.data.iloc[data_row, input_column] = 1
+        #             self.data.iloc[data_row, output_column] = -1
+        #             self.b[data_row] = 0
 
 
 class LpInequalityConstraints(InequalityConstraints):
@@ -153,26 +242,17 @@ def create_lpop(input_data: InputData, net: Network) -> LP:
     lpop = LP()
     _v_name, _c_name = create_names(input_data, net.adj_matrix)
 
-    var_name, col_name = create_names(input_data, net.adj_matrix)
-
-    lpop.of = LpOF(input_data, var_name, col_name)
+    var_name, col_name = create_names(input_data,
+                                      net.adj_matrix,
+                                      problem="lp")
 
     lpop.eq_constraints = LpEqualityConstraints(input_data, var_name,
                                                 col_name, net)
     lpop.ineq_constraints = LpInequalityConstraints(input_data, var_name,
                                                     col_name, net)
+    lpop.add_synthetic_variables()
 
-    # y = [f'y{i + 1}' for i in range(
-    #     len(input_data.gateway) +
-    #     len(input_data.device) +
-    #     len(input_data.station)
-    # )]
-    # var_name = VarName(z=_v_name['z'], x=_v_name['x'], y=y)
-    # col_name = VarName(z=_c_name['z'], x=_c_name['x'], y=y)
-    # lpop.of = LpOF(input_data, var_name, col_name)
-    #
-    # lpop.eq_constraints = LpEqualityConstraints(input_data, var_name,
-    #                                             col_name, net)
-    # lpop.ineq_constraints = LpInequalityConstraints(input_data, var_name,
-    #                                                 col_name, net)
+    lpop.of = LpOF(input_data, net.adj_matrix, var_name, col_name)
+    a = 1
+
     return lpop

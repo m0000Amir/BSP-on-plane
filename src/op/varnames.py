@@ -2,11 +2,12 @@
 Creation of variable names and column names for MIP
 """
 from __future__ import annotations
-from typing import List, Tuple, Dict, TYPE_CHECKING, Any
+from typing import List, Tuple, Dict, TYPE_CHECKING, Any, Union
 if TYPE_CHECKING:
     from mip_solution import InputData
 from itertools import product,  permutations, repeat, chain
 import numpy as np
+
 
 class VarName:
     """ Names of problem variable"""
@@ -24,6 +25,21 @@ class VarName:
         self.y = y
 
 
+class LpVarName:
+    """ Names of linear problem variable"""
+    def __init__(self,
+                 z: List[str] = None,
+                 edge_z: List[Tuple[int, int]] = None,
+                 x: List[str] = None,
+                 edge_x: List[Tuple[int, int]] = None) -> None:
+        self.name = np.array(z + x)
+        self.z = z
+        self.edge_z = edge_z
+        self.x = x
+        self.edge_x = edge_x
+        self.y = None
+
+
 def create_edge_var_name(name: str,
                          edge_nodes: List[Any, ...],
                          sep: str = '_') -> List[str]:
@@ -32,7 +48,8 @@ def create_edge_var_name(name: str,
 
 
 def get_variable_name(input_data: InputData,
-                      adj_matrix: np.array) -> VarName:
+                      adj_matrix: np.array,
+                      problem: str = "mip") -> Union[VarName, LpVarName]:
     """
     Get variable name of the problem
 
@@ -55,13 +72,16 @@ def get_variable_name(input_data: InputData,
     var_z = create_edge_var_name('z', edge_z)
     var_x = create_edge_var_name('x', edge_x)
 
-    # var_y = ['y' + str(i) for i in input_data.station.keys()]
-    var_y = create_edge_var_name('y', edge_x)
+    if problem == "mip":
+        var_y = create_edge_var_name('y', edge_x)
+        return VarName(var_z, edge_z, var_x, edge_x, var_y)
+    else:
+        return LpVarName(var_z, edge_z, var_x, edge_x)
 
-    return VarName(var_z, edge_z, var_x, edge_x, var_y)
 
-
-def get_column_name(input_data: InputData, adj_matrix: np.array) -> VarName:
+def get_column_name(input_data: InputData,
+                    adj_matrix: np.array,
+                    problem: str = "mip") -> Union[VarName, LpVarName]:
     point_count = int(len(input_data.station) / len(input_data.type))
     station_point = [list(input_data.station.keys())[0] + i
                      for i in range(point_count)]
@@ -106,27 +126,33 @@ def get_column_name(input_data: InputData, adj_matrix: np.array) -> VarName:
     #     station_point,
     #     list(map(lambda x: x + 1, input_data.type.keys()))))
     # _coordinate_n_sta = [f'c{_[0]}_s{_[1]}' for _ in _sp]  # y=_coordinate_n_sta
+    if problem == "mip":
+        _edge = sta2sta + sta2gtw
+        binary_value_y = [f'Y_{i}' for i in _edge]
+        return VarName(z=device2sta, x=(sta2sta + sta2gtw), y=binary_value_y)
+    else:
+        return LpVarName(z=device2sta, x=(sta2sta + sta2gtw))
 
-    _edge = sta2sta + sta2gtw
-    binary_value_y = [f'Y_{i}' for i in _edge]
 
-
-    return VarName(z=device2sta, x=(sta2sta + sta2gtw), y=binary_value_y)
-
-
-def create_names(input_data: InputData, adj_matrix: np.array) -> Tuple[VarName, VarName]:
+def create_names(input_data: InputData,
+                 adj_matrix: np.array,
+                 problem:str = "mip") -> Tuple[VarName, VarName]:
     """
     Create variable and column name
     Parameters
     ----------
+
     input_data: include device, station points with placed station,
                 gateway, and station types.
+
+    adj_matrix
+    problem: string Type of problem MIP or otherwise (LP)
 
     Returns
     -------
         - variable name;
         - column name.
     """
-    variable_name = get_variable_name(input_data, adj_matrix)
-    column_name = get_column_name(input_data, adj_matrix)
+    variable_name = get_variable_name(input_data, adj_matrix, problem)
+    column_name = get_column_name(input_data, adj_matrix, problem)
     return variable_name, column_name

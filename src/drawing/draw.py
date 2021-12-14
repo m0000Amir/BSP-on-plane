@@ -73,6 +73,7 @@ def draw_input_data(net: Network) -> None:
                      xytext=(tx - tx_scale, ty + tx_scale), ha='right',
                      va='top', color='k', size=12)
         # plt.show()
+        # a = 1
 
     s_x, s_y = get_coordinates(station_pos)
     plt.plot(s_x, s_y, color='#57FF9A', marker='X', markersize=22,
@@ -87,7 +88,7 @@ def draw_input_data(net: Network) -> None:
     plt.grid()
     plt.savefig('bsp_input_data.png')
     plt.show()
-    a = 1
+    # a = 1
 
 
 def prepare_graph_for_draw(net, placed_sta):
