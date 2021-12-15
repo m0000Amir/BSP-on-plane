@@ -1,5 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import matplotlib
 import pandas as pd
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import PIL
@@ -279,4 +280,42 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
 
     plt.savefig('bsp_solution.png')
+    plt.show()
+
+
+if __name__ == "__main__":
+    """
+    Create figures for thesis
+    """
+    g = nx.DiGraph()
+    g.add_edge(1, 2, label=r'$w_{ij}$')
+    g.add_edge(2, 1, label=r'$w_{ji}$')
+    labels = {1: fr"$s_i$", 2: fr"$s_j$"}
+    color_map = ['w'] * len(g.nodes)
+
+    matplotlib.rc('text', usetex=True)
+    plt.rcParams['text.latex.preamble'] = \
+        r"\usepackage{bm} \usepackage{amsmath}"
+
+    plt.figure(figsize=(6, 3))
+    pos = {1: (5, 3), 2: (11, 3)}
+    nx.draw(g, pos, node_size=2500, node_color=color_map,
+            edgecolors='yellowgreen', linewidths=5, edge_color='dodgerblue',
+            arrows=True, connectionstyle='arc3, rad = 0.2', width=3.0)
+
+    nx.draw_networkx_labels(g, pos, labels, font_size=35,
+                            font_color='yellowgreen')
+    edge_labels = nx.get_edge_attributes(g, 'label')
+    label_pos = {1: (7, 4), 2: (9, 2)}
+
+    nx.draw_networkx_edge_labels(g,
+                                 pos=label_pos,
+                                 edge_labels={(1, 2): r'$w_{ij}$',
+                                              (2, 1): r'$w_{ji}$'},
+                                 font_color="dodgerblue",
+                                 font_size=30,
+                                 label_pos=0.13,
+                                 verticalalignment="center",  rotate=False)
+    plt.axis("off")
+    plt.savefig("edges_between_stations.png")
     plt.show()

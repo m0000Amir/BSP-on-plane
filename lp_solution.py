@@ -121,7 +121,7 @@ def prepare_lp_input_data(data: Dict) -> InputData:
 
 
 if __name__ == "__main__":
-    with open("input/lp_problem_test_5.json") as f:
+    with open("input/lp_problem_test_2.json") as f:
         data_from_json = json.load(f)
 
     input_data = prepare_lp_input_data(data_from_json)
