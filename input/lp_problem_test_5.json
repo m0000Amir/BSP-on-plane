@@ -1,0 +1,123 @@
+{
+  "gateway": [
+    {
+      "coordinates": [
+        8,
+        15
+      ],
+      "intensity": 10e6,
+      "p_tr": 20,
+      "g": 4,
+      "p_recv": -79,
+      "l": 1,
+      "modulation": "MCS7",
+      "frequency": 5537,
+      "spatial_streams": 2
+    }
+  ],
+  "device": [
+    {
+      "coordinates": [
+        -2,
+        0
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 10
+    },
+    {
+      "coordinates": [
+        6,
+        12
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 10
+    },
+    {
+      "coordinates": [
+        4,
+        8
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 10
+    },
+    {
+      "coordinates": [
+        7.6,
+        6
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 10
+    },
+    {
+      "coordinates": [
+        3.2,
+        10
+      ],
+      "p_tr": 10,
+      "g_tr": 1,
+      "l_tr": 0,
+      "intensity": 10
+    }
+
+  ],
+  "station": {
+    "coordinates": [
+      [
+        2,
+        4
+      ],
+      [
+        10,
+        10
+      ],
+      [
+        6,
+        8
+      ]
+    ],
+    "type": [
+      {
+        "intensity": 130,
+        "cost": 70,
+        "p_tr": 20,
+        "g": 4,
+        "p_recv": -79,
+        "l": 1,
+        "modulation": "MCS7",
+        "frequency": 5537,
+        "spatial_streams": 2
+
+      },
+      {
+        "intensity": 130,
+        "cost": 70,
+        "p_tr": 18,
+        "g": 3,
+        "p_recv": -81,
+        "l": 1,
+        "modulation": "MCS5",
+        "frequency": 5537,
+        "spatial_streams": 2
+      },
+      {
+        "intensity": 130,
+        "cost": 70,
+        "p_tr": 18,
+        "g": 3,
+        "p_recv": -81,
+        "l": 1,
+        "modulation": "MCS5",
+        "frequency": 5537,
+        "spatial_streams": 2
+      }
+    ]
+  }
+}

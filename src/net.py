@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import List, TYPE_CHECKING
 if TYPE_CHECKING:
     from mip_solution import InputData
+
 from itertools import product,  permutations
 import math
+import pickle
 
 
 import networkx as nx
@@ -87,4 +89,7 @@ def create_graph(input_data: InputData) -> Network:
             net.graph.add_edge(s2g[0], s2g[1])
 
     net.is_connected_graph()
+    np.save("./input/feasible_problem/adj_matrix.npy", net.adj_matrix)
+    net_filename = open("./input/feasible_problem/net.pkl", 'wb')
+    pickle.dump(net, net_filename)
     return net

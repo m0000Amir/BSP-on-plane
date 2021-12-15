@@ -73,7 +73,6 @@ def draw_input_data(net: Network) -> None:
                      xytext=(tx - tx_scale, ty + tx_scale), ha='right',
                      va='top', color='k', size=12)
         # plt.show()
-        # a = 1
 
     s_x, s_y = get_coordinates(station_pos)
     plt.plot(s_x, s_y, color='#57FF9A', marker='X', markersize=22,
@@ -88,7 +87,7 @@ def draw_input_data(net: Network) -> None:
     plt.grid()
     plt.savefig('bsp_input_data.png')
     plt.show()
-    # a = 1
+    a = 1
 
 
 def prepare_graph_for_draw(net, placed_sta):
@@ -264,7 +263,7 @@ def draw_mip_graph(net: Network, problem: MIP, solution: pd.Series) -> None:
     tr_axes = fig.transFigure.inverted().transform
 
     # Select the size of the image (relative to the X axis)
-    icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.003
+    icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.002
     icon_center = icon_size / 2.0
 
     # Add the respective image to each node

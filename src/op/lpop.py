@@ -25,10 +25,12 @@ class LP(MIP):
                 (self.ineq_constraints is not None)):
             eq_constraints_count = len(self.eq_constraints.data)
             ineq_constraints_count = len(self.ineq_constraints.data)
-            self.add_synthetic_name(eq_constraints_count,
-                                    ineq_constraints_count)
+
             all_synthetic_variables = np.eye(eq_constraints_count +
                                              ineq_constraints_count).astype(int)
+            # _col = len(self.eq_constraints.var.z)
+            # all_synthetic_variables = _all_synthetic_variables[:, _col:]
+            self.add_synthetic_name(all_synthetic_variables)
             eq_synthetic_variables = \
                 all_synthetic_variables[:eq_constraints_count, :]
             eq_data = np.hstack(
@@ -44,12 +46,10 @@ class LP(MIP):
                 ineq_data, columns=self.ineq_constraints.column.name)
 
     def add_synthetic_name(self,
-                           eq_constraints_count: int,
-                           ineq_constraints_count: int
+                           all_synthetic_variables: np.array
                            ):
         """ Need to add synthetic variables for OF """
-        synthetic_name = [f"y{i + 1}" for i in range(eq_constraints_count +
-                                                     ineq_constraints_count)]
+        synthetic_name = [f"y{i + 1}" for i in range(len(all_synthetic_variables[0, :]))]
         self.eq_constraints.var.y = synthetic_name
         self.eq_constraints.var.y = synthetic_name
         self.eq_constraints.var.name = np.append(
@@ -114,6 +114,21 @@ class LpEqualityConstraints(EqualityConstraints):
                  net: Network):
         super().__init__(input_data, var_name, col_name, net)
 
+    def gateway_conditions(self, input_data: InputData, net: Network):
+        """
+            Prepare equality constraints for gateway. Through the stations, all
+            information flow from devices must be available to the gateway.
+        """
+        for i in input_data.gateway.keys():
+            data_row = self.counter()
+            _row, = np.where(net.adj_matrix[:, i] == 1)
+            _row_name = ['x' + str(_row[j]) + '_' +
+                         str(i) for j in range(len(_row))]
+            _col, = np.where(np.in1d(self.var.name, _row_name))
+            self.data.iloc[data_row, _col] = 1
+            self.b[i] = sum(input_data.device[i]["intensity"]
+                            for i in input_data.device.keys())
+
     def device_conditions_b(self, input_data: InputData):
         """ right vector for device conditions """
         for i in input_data.device.keys():
@@ -158,7 +173,9 @@ class LpEqualityConstraints(EqualityConstraints):
             _column, = np.where(np.in1d(self.var.name, _var_name))
             self.data.iloc[data_row, _column] = -1
             self.b[data_row] = 0
-        # TODO: check it
+
+        # TODO: check it ($x_{ij} = - x_{ji}$)
+
         # for i in input_data.station.keys():
         #     for j in input_data.station.keys():
         #         if i != j:
@@ -217,6 +234,23 @@ class LpInequalityConstraints(InequalityConstraints):
         """ This method (from class InequalityConstraints) is not needed """
         pass
 
+    # def station_conditions(self, input_data, net) -> None:
+    #     # for i in input_data.station.keys():
+    #     #     data_row = self.counter()
+    #     #     self.get_links_from_device_to_sta(i, data_row, input_data, net)
+    #     #
+    #     #     self.get_station_limit_condition(i, data_row, input_data)
+    #     #
+    #     # self.to_place_only_one_station_condition(input_data, net)
+    #     for i in input_data.station.keys():
+    #         data_row = self.counter()
+    #         _row, = np.where(net.adj_matrix[i, :] == 1)
+    #         for j in _row:
+    #             _var_name = [f'x{int(i)}_{j}']
+    #             _col = np.where(np.in1d(self.var.name, _var_name))
+    #             self.data.iloc[data_row, _col] = 1
+    #             self.get_station_limit_condition(i, data_row, input_data)
+    #     a = 1
 
 def create_lpop(input_data: InputData, net: Network) -> LP:
     """
@@ -254,5 +288,4 @@ def create_lpop(input_data: InputData, net: Network) -> LP:
 
     lpop.of = LpOF(input_data, net.adj_matrix, var_name, col_name)
     a = 1
-
     return lpop
